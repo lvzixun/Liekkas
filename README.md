@@ -13,13 +13,12 @@ a simple audio wrapper libary base on OpenAL. inspired by [Liekkas](http://music
 
 
 ## support audio format 
-
-  | audio format | status |
-  |:-------:|:-------:|
-  | CAF | done |
-  | mp3 | done |
-  | wav | working |
-  | ogg | working |
+| audio format | status |
+|:-------:|:-------:|
+| CAF | done |
+| mp3 | done |
+| wav | working |
+| ogg | working |
 
 ## require 
 
