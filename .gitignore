@@ -1,0 +1,8 @@
+*.so
+*.o
+*.dll
+*.exe
+*.dSYM
+mingw_oal
+cocos
+.DS_Store
