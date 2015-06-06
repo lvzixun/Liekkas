@@ -2,6 +2,7 @@
 a simple audio wrapper libary base on OpenAL. inspired by [Liekkas](http://music.163.com/#/song?id=3413895). ;)
 
 ## support platform
+
 | platform | status |
 |:-------:|:-------:|
 | MAC OSX |  done |
@@ -12,6 +13,7 @@ a simple audio wrapper libary base on OpenAL. inspired by [Liekkas](http://music
 
 
 ## support audio format 
+
   | audio format | status |
   |:-------:|:-------:|
   | CAF | done |
@@ -20,6 +22,7 @@ a simple audio wrapper libary base on OpenAL. inspired by [Liekkas](http://music
   | ogg | working |
 
 ## require 
+
 1. OpenAL (window need)
 2. mpg123 
 3. mingw32 (window need)
@@ -46,4 +49,4 @@ read [`t.lua`](https://github.com/lvzixun/Liekkas/blob/master/t.lua) for more de
   audio:background_music_play(file_path, loop)    -- play a music sound, will load audio file when not load.
   audio:background_music_stop()                   -- stop the current playing music sound
 ~~~
-read [`audio.lua`] wrapper file for more detail.
+read [`audio.lua`](https://github.com/lvzixun/Liekkas/blob/master/audio.lua) wrapper file for more detail.
