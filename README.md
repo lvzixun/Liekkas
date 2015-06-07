@@ -22,7 +22,7 @@ a simple audio wrapper libary base on OpenAL. inspired by [Liekkas](http://music
 
 ## require 
 
-1. OpenAL (window need)
+1. OpenAL
 2. mpg123 
 3. mingw32 (window need)
 4. lua (>=lua5.2)
@@ -36,14 +36,14 @@ $ lua t.lua
 read [`t.lua`](https://github.com/lvzixun/Liekkas/blob/master/t.lua) for more detail.
 
 ## LUA API
- 1. effect sound API
+ effect sound API
 ~~~.lua
   audio:load(file_path [, file_type])   -- load a audio file
   audio:unload(file_path)               -- unload a audio file
   audio:play(file_path)                 -- play a effect sound
 ~~~
 
- 2. background music API
+ background music API
 ~~~.lua
   audio:background_music_load(file_path)          -- preload a music sound
   audio:background_music_play(file_path, loop)    -- play a music sound, will load audio file when not load.
