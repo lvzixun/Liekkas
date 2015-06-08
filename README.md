@@ -17,7 +17,7 @@ a simple audio wrapper libary base on OpenAL. inspired by [Liekkas](http://music
 |:-------:|:-------:|
 | CAF | done |
 | mp3 | done |
-| wav | working |
+| wav | done |
 | ogg | working |
 
 ## require 
