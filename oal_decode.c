@@ -5,6 +5,7 @@
 int adl_decode_caf(lua_State* L);
 int adl_decode_mp3(lua_State* L);
 int adl_decode_hardware_ios(lua_State* L);
+int adl_decode_wav(lua_State* L);
 
 
 
@@ -30,14 +31,14 @@ ad_last_error() {
 
 static int
 _info_gc(lua_State* L) {
-  struct oal_info* p = lua_touserdata(L, 1);
+  struct oal_info* p = (struct oal_info*)lua_touserdata(L, 1);
   od_free_info(p);
   return 0;
 }
 
 static int
 _info_tostring(lua_State* L) {
-  struct oal_info* p = lua_touserdata(L, 1);
+  struct oal_info* p = (struct oal_info*)lua_touserdata(L, 1);
   char buffer[128] = {0};
   sprintf(buffer, "type:%s format: %d freq: %d size:%d", p->type, p->format, p->freq, p->size);
   lua_pushstring(L, buffer);
@@ -47,7 +48,7 @@ _info_tostring(lua_State* L) {
 
 int
 ad_new_info(lua_State* L, struct oal_info* info) {
-  struct oal_info* p = lua_newuserdata(L, sizeof(*info));
+  struct oal_info* p = (struct oal_info*)lua_newuserdata(L, sizeof(*info));
   *p = *info;
   if(luaL_newmetatable(L, "oal_info")) {
     lua_pushcfunction(L, _info_gc);
@@ -68,6 +69,7 @@ luaopen_oal_decode(lua_State* L) {
   luaL_Reg l[] = {
     {"decode_caf", adl_decode_caf},
     {"decode_mp3", adl_decode_mp3},
+    {"decode_wav", adl_decode_wav},
     {NULL, NULL},
   };
 

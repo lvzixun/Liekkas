@@ -6,6 +6,7 @@ OAL_SOURCE = oal.c \
 	oal_decode.c \
 	decode/ad_caf.c \
 	decode/ad_mp3.c \
+	decode/ad_wav.c \
 	decode/ad_hardware_mac_ios.m
 
 ifeq ($(UNAME), Darwin)

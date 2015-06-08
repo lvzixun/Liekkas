@@ -38,6 +38,9 @@ local support_type = {
   ["mp3"] = function (file_path)
     return ad.decode_mp3(file_path)
   end,
+  ["wav"] = function (file_path)
+    return ad.decode_wav(file_path)
+  end,
 }
 
 function M:load(file_path, file_type)
