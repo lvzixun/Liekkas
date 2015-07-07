@@ -1,7 +1,9 @@
 local audio = require "audio"
+local music = require "music"
+local sound = require "sound"
 
 local function _delay()
-  for i=1,100000000 do
+  for i=1,50000000 do
   end
   print("delay~~")
 end
@@ -27,25 +29,28 @@ local _music = {
 
 
 for i,v in ipairs(_sound) do
-  audio:load(v)
+  sound:load(v)
 end
 
-
-
-audio:play(_sound[3])
+sound:play(_sound[1], true)
 _delay()
-audio:play(_sound[1])
+sound:play(_sound[3])
+
+
+local group1 = audio:create_group(3)
+local handle = group1:add(_sound[1])
+group1:play(handle)
+
+group1:play(group1:add(_sound[2]))
+group1:play(group1:add(_sound[2]))
+group1:play(group1:add(_sound[1], true))
+
 _delay()
-audio:play(_sound[2])
-
-audio:background_music_play(_music[1], true)
-_delay()
-audio:background_music_stop()
-_delay()
-audio:background_music_play(_music[2], true)
+audio:unload(_sound[1])
 
 
 
+music.play(_music[1], true)
 
 
 --never breakup
