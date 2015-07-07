@@ -79,6 +79,15 @@ l_free_source(lua_State* L) {
 }
 
 static int
+l_source_state(lua_State* L) {
+  ALuint source_id = *((ALuint*)lua_touserdata(L, 1));
+  ALint state;
+  alGetSourcei(source_id, AL_SOURCE_STATE, &state);
+  lua_pushinteger(L, state);
+  return 1;
+}
+
+static int
 l_play_source(lua_State* L) {
   ALuint source_id = *((ALuint*)lua_touserdata(L, 1));
   alSourcePlay(source_id);
@@ -122,7 +131,7 @@ l_clear_source(lua_State* L) {
 
 static int
 _new_source(lua_State* L, ALuint source_id) {
-  ALuint* p = lua_newuserdata(L, sizeof(source_id));
+  ALuint* p = (ALuint*)lua_newuserdata(L, sizeof(source_id));
   *p = source_id;
   if(luaL_newmetatable(L, "mt_source")) {
     lua_pushcfunction(L, l_free_source);
@@ -136,6 +145,7 @@ _new_source(lua_State* L, ALuint source_id) {
       {"stop", l_stop_source},
       {"rewind", l_rewind_source},
       {"pause", l_pause_source},
+      {"state", l_source_state},
       {NULL, NULL},
     };
     luaL_newlib(L, l);
@@ -178,7 +188,7 @@ l_free_bufferid(lua_State* L) {
 
 static int
 _new_bufferid(lua_State* L, ALuint buffer_id) {
-  ALuint* p = lua_newuserdata(L, sizeof(buffer_id));
+  ALuint* p = (ALuint*)lua_newuserdata(L, sizeof(buffer_id));
   *p = buffer_id;
   if(luaL_newmetatable(L, "mt_buffer")) {
     lua_pushcfunction(L, l_free_bufferid);
@@ -191,6 +201,27 @@ _new_bufferid(lua_State* L, ALuint buffer_id) {
   return 1;
 }
 
+
+static void
+_source_state(lua_State* L) {
+  struct {
+    ALint t;
+    const char*  s;
+  }v[] = {
+    { AL_PLAYING, "playing"},
+    { AL_INITIAL, "initial"},
+    { AL_STOPPED, "stopped"},
+    { AL_PAUSED, "paused"},
+  };
+
+  lua_newtable(L);
+  int i;
+  for(i=0; i<sizeof(v) / sizeof(v[0]); i++) {
+    lua_pushstring(L, v[i].s);
+    lua_pushinteger(L, v[i].t);
+    lua_settable(L, -3);
+  }
+}
 
 static int
 l_create_bufferid(lua_State* L) {
@@ -209,7 +240,7 @@ l_create_bufferid(lua_State* L) {
 static int
 l_bind_buffer(lua_State* L) {
   ALuint buffer_id = *((ALuint*)lua_touserdata(L, 1));
-  struct oal_info* info = lua_touserdata(L, 2);
+  struct oal_info* info = (struct oal_info*)lua_touserdata(L, 2);
 
   int err=AL_NO_ERROR;
   alGetError(); // clear error
@@ -295,6 +326,11 @@ luaopen_oal(lua_State* L) {
   };
 
   luaL_newlib(L, l);
+
+  // set source state
+  _source_state(L);
+  lua_setfield(L, -2, "source_state");
+
   return 1;
 }
 

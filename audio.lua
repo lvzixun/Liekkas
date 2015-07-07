@@ -1,35 +1,33 @@
 local oal = require "oal"
 local ad = require "oal.decode"
 
+
 local SOURCE_LIMIT = 32
+assert(SOURCE_LIMIT >0 and SOURCE_LIMIT <= 0x7f) -- th source region [0, 0x7f]
 
 
 local M = {
   load_map = {},
-
-  source_handle = {},
-  _cur_source_idx = 0,
-
-  background_music_source = false,
+  playing_source = {},
 }
+
+
+local group_mt = {}
+group_mt.__index = group_mt
+
+
+function M:_set_playing(file_path)
+  local playing_source = self.playing_source
+  if not playing_source[file_path] then
+    playing_source[file_path] = setmetatable({}, {__mode = "kv"})
+  end
+end
+
 
 local function _suffix(s)
   return string.gsub(s, "^.+%.(.+)$", "%1")
 end
 
-
-function M:_init()
-  -- init source handle
-  local handles = self.source_handle
-  for i=1,SOURCE_LIMIT do
-    handles[i] = {
-    source_id = oal.create_source(),
-    load_key = false,
-  }
-  end
-
-  self.background_music_source = oal.create_source()
-end
 
 local support_type = {
   ["caf"] = function (file_path)
@@ -61,121 +59,147 @@ function M:load(file_path, file_type)
       buffer_id = buffer_id,
     }
     self.load_map[file_path] = entry
+    self:_set_playing(file_path)
   end
 end
 
 
 function M:unload(file_path)
   local entry = self.load_map[file_path]
+  local source_map = self.playing_source[file_path]
   if not entry then
     return
   end
 
-  for i,v in ipairs(self.source_handle) do
-    if v.load_key == file_path then
-      local source_id = v.source_id
-      source_id:clear()
-      v.load_key = false
-    end
+  for k,v in pairs(source_map) do
+    k:clear()
+    source_map[k] = nil
   end
 
   self.load_map[file_path] = nil
 end
 
 
+function M:create_group(source_count)
+  source_count = source_count or 1
 
-function M:_get_source()
-  self._cur_source_idx = self._cur_source_idx % SOURCE_LIMIT + 1
-  return self.source_handle[self._cur_source_idx]
+  if source_count > SOURCE_LIMIT then 
+    error("source count is too big.(>.."..tostring(source_count)..")")
+  end
+
+  local raw = {
+    source_count = source_count,
+    source_list = {},
+    cur_indx = 1,
+  }
+
+  local source_list = raw.source_list
+  for i=1,source_count do
+    source_list[i] = {
+      idx = i,
+      file = false,
+      source_id = oal.create_source(),
+      version = 0,
+    }
+  end
+
+  return setmetatable(raw, group_mt)
 end
 
 
-function M:play(file_path, loop, pitch, pan, gain)
+local function _update_version(version)
+  return (version+1) & 0x00ffffff -- region [0, 0x00ffffff]
+end
+
+
+local function _gen_handle(idx, version)
+  return idx << 24 | version
+end
+
+
+local function _unpack_handle(handle)
+  local version = handle & 0x00ffffff
+  local idx = handle >> 24
+  return idx, version
+end
+
+--------------- group  -------------------
+
+function group_mt:_get_source_handle()
+  local cur_indx = self.cur_indx
+  local source_count = self.source_count
+  local ret = self.source_list[cur_indx]
+  self.cur_indx = cur_indx % source_count + 1
+
+  return ret
+end
+
+
+function group_mt:add(file_path, loop, pitch, pan, gain)
   pitch = pitch or 1.0
   pan = pan or 0.0
   gain = gain or 1.0
   loop = loop or false
-  local entry = self.load_map[file_path]
+
+  local playing_source = M.playing_source
+  local entry = M.load_map[file_path]
   if entry then
-    local source = self:_get_source()
-    source.load_key = file_path
-    local source_id = source.source_id
-    oal.source_set(source_id, entry.buffer_id, pitch, pan, gain, loop)
-    source_id:play()
-  end
-end
+    local group_handle = self:_get_source_handle()
+    local version = group_handle.version
+    local source_id = group_handle.source_id
 
+    version = _update_version(version)
+    group_handle.version = version
+    local file = group_handle.file
+    group_handle.file = file_path
 
-
---------------- background music -------------------
-
-
-local function _gen_ios_hd_func()
-  local cur_file_path = false
-  local hd_ios = ad.decode_hardware_ios
-  local m = {}
-
-  function m.load(self, file_path)
-    hd_ios.load(file_path)
-    cur_file_path = file_path
-  end
-
-  function m.play(self, file_path, loop)
-    if file_path ~= cur_file_path then
-      m.load(self, file_path)
+    if file then
+      playing_source[file][source_id] = nil
     end
-    hd_ios.play(loop or false)
+    playing_source[file_path][source_id] = true
+
+    oal.source_set(source_id, entry.buffer_id, pitch, pan, gain, loop)
+    return _gen_handle(group_handle.idx, version)
+  end
+end
+
+
+local function _audio_op(self, op, handle)
+  local idx, version = _unpack_handle(handle)
+  local group_handle = self.source_list[idx]
+
+  if not group_handle or  
+     group_handle.version ~= version or 
+     not M.load_map[group_handle.file]
+    then
+    print("_audio_op false:", op, handle, version, group_handle.version)
+    return false 
   end
 
-  function m.stop(self)
-    hd_ios.stop()
-  end
-  return m
+  local source_id = group_handle.source_id
+  source_id[op](source_id)
+  return true
 end
 
 
-local bg_t = ad.decode_hardware_ios and "ios_hd" or "oal"
-local _bg_music_handles = {
-  ["ios_hd"] = _gen_ios_hd_func(),
-
-  ["oal"] = {
-    load = function (self, file_path)
-      self:load(file_path)
-    end,
-
-    play = function (self, file_path, loop)
-      self:load(file_path)
-      local entry = self.load_map[file_path]
-      local source = self.background_music_source
-      oal.source_set(source, entry.buffer_id, 1.0, 0.0, 1.0, loop or false)
-      source:play()
-    end,
-
-    stop = function (self)
-      local source = self.background_music_source
-      if source then
-        source:stop()
-      end
-    end,
-  },
-}
-
-local _cur_bg_handle = _bg_music_handles[bg_t]
-assert(_cur_bg_handle)
-
-
-function M:background_music_load(file_path)
-  _cur_bg_handle.load(self, file_path)
+function group_mt:stop(handle)
+  return _audio_op(self, "stop", handle)
 end
 
-function M:background_music_play(file_path, loop)
-  _cur_bg_handle.play(self, file_path, loop)
+
+function group_mt:rewind(handle)
+  return _audio_op(self, "rewind", handle)
 end
 
-function M:background_music_stop()
-  _cur_bg_handle.stop(self)
+
+function group_mt:pause(handle)
+  return _audio_op(self, "pause", handle)
 end
 
-M:_init()
+
+function group_mt:play(handle)
+  return _audio_op(self, "play", handle)
+end
+
 return M
 
