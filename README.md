@@ -23,7 +23,7 @@ a simple audio wrapper libary base on OpenAL. inspired by [Liekkas](http://music
 ## require 
 
 1. OpenAL
-2. mpg123 
+2. mpg123  (if you want support mp3)
 3. mingw32 (window need)
 4. lua (>=lua5.2)
 
@@ -36,17 +36,35 @@ $ lua t.lua
 read [`t.lua`](https://github.com/lvzixun/Liekkas/blob/master/t.lua) for more detail.
 
 ## LUA API
- effect sound API
+ simple effect sound API
 ~~~.lua
-  audio:load(file_path [, file_type])   -- load a audio file
-  audio:unload(file_path)               -- unload a audio file
-  audio:play(file_path)                 -- play a effect sound
+  local sound = require "sound"
+
+  sound:load(file_path [, file_type])   -- load a audio file
+  sound:unload(file_path)               -- unload a audio file
+  sound:play(file_path)                 -- play a effect sound
 ~~~
 
  background music API
 ~~~.lua
-  audio:background_music_load(file_path)          -- preload a music sound
-  audio:background_music_play(file_path, loop)    -- play a music sound, will load audio file when not load.
-  audio:background_music_stop()                   -- stop the current playing music sound
+  local music = require "music"
+
+  music.load(file_path)          -- preload a music sound
+  music.play(file_path, loop)    -- play a music sound, will load audio file when not load.
+  music.stop()                   -- stop the current playing music sound
 ~~~
+
+  group effect sound API
+~~~.lua
+  local audio = require "audio"
+
+  local group1 = audio:create_group([count]) -- create a sound group has count source
+  local handle = group1:add(file_path, [loop, [pitch, [pan, [gain]]]]) -- add sound file to group
+
+  group1:play(handle)    -- play sound
+  group1:stop(handle)    -- stop sound
+  group1:rewind(handle)  -- rewind sound
+  group1:pause(handle)  -- pause sound
+~~~
+
 read [`audio.lua`](https://github.com/lvzixun/Liekkas/blob/master/audio.lua) wrapper file for more detail.
