@@ -40,9 +40,9 @@ read [`t.lua`](https://github.com/lvzixun/Liekkas/blob/master/t.lua) for more de
 ~~~.lua
   local sound = require "sound"
 
-  sound:load(file_path [, file_type])   -- load a audio file
-  sound:unload(file_path)               -- unload a audio file
-  sound:play(file_path)                 -- play a effect sound
+  sound:load(file_path [, file_type])                     -- load a audio file
+  sound:unload(file_path)                                 -- unload a audio file
+  sound:play(file_path, [loop, [pitch, [pan, [gain]]]])   -- play a effect sound
 ~~~
 
  background music API
