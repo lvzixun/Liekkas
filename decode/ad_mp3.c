@@ -83,11 +83,12 @@ _read(mpg123_handle* handle, size_t size, size_t *out_done) {
   return head;
 }
 
-static struct oal_info*
+static bool
 _decode_mp3(const char* filepath, struct oal_info* out) {
+  bool ret = false;
   mpg123_handle* handle = _get_handle();
   if(!handle){
-    ad_error("cannot set specified mpg123 format");
+    ad_error("cannot set specified mpg123 format, file: %s", filepath);
     goto EXIT;
   }
 
@@ -109,8 +110,8 @@ _decode_mp3(const char* filepath, struct oal_info* out) {
   size_t done = 0;
   unsigned char* buffer = _read(handle, size, &done);
   if(!buffer) {
-    ad_error("mpg123_read error");
-    out = NULL;
+    ad_error("mpg123_read error: %s", filepath);
+    goto EXIT;
   }else {
     out->type = "mp3";
     out->data = buffer;
@@ -118,15 +119,16 @@ _decode_mp3(const char* filepath, struct oal_info* out) {
   }
 
   mpg123_close(handle);
+  ret = true;
 EXIT:
-  return out;
+  return ret;
 }
 
 #else
-static struct oal_info*
+static bool
 _decode_mp3(const char* filepath, struct oal_info* out) {
   ad_error("mp3 not support");
-  return NULL;
+  return false;
 }
 #endif
 

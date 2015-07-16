@@ -23,7 +23,7 @@ _decode_caf (const char* filepath, struct oal_info* out) {
 
   status = ExtAudioFileOpenURL(url, &extRef);
   if(status != noErr) {
-    ad_error("cannot openurl from ExtAudioFileOpenURL status: [%ld]", status);
+    ad_error("cannot openurl %s from ExtAudioFileOpenURL status: [%ld]", filepath, status);
     goto EXIT;
   }
 
