@@ -68,3 +68,13 @@ read [`t.lua`](https://github.com/lvzixun/Liekkas/blob/master/t.lua) for more de
 ~~~
 
 read [`audio.lua`](https://github.com/lvzixun/Liekkas/blob/master/audio.lua) wrapper file for more detail.
+
+## interrupt interface
+~~~.c
+// call after interruption starts
+void oal_interrupted();
+
+// call after interruption ends
+void oal_resumed();
+~~~
+
