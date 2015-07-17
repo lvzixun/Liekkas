@@ -14,6 +14,11 @@
 #define OAL_RATE_BASIC 8000
 #define OAL_RATE_DEFAULT 44100
 
+struct _oal_state {
+  ALCcontext* context;
+  bool is_load;
+} OAL_STATE = {0};
+
 
 
 typedef ALvoid  AL_APIENTRY (*alcMacOSXMixerOutputRateProcPtr) (const ALdouble value);
@@ -33,10 +38,13 @@ alcMacOSXMixerOutputRateProc(const ALdouble value) {
 
 static void
 _init_openal(lua_State* L) {
-  ALCcontext* context;
-  ALCdevice* new_device = NULL;
+  if(OAL_STATE.is_load)
+    return;
+
   alcMacOSXMixerOutputRateProc(OAL_RATE_DEFAULT);
 
+  ALCcontext* context = NULL;
+  ALCdevice* new_device = NULL;
   // Create a new OpenAL Device
   // Pass NULL to specify the system's default output device
   new_device = alcOpenDevice(NULL);
@@ -53,7 +61,11 @@ _init_openal(lua_State* L) {
   }else {
     luaL_error(L, "no device");
   }
+
+  OAL_STATE.is_load = true;
+  OAL_STATE.context = context;
 }
+
 
 static int
 _id2string(lua_State* L) {
@@ -291,30 +303,39 @@ l_set(lua_State* L) {
 }
 
 
-static bool _is_load = false;
 // maybe never call
 static void
 _free_oal() {
-  if(_is_load) {
-    ALCcontext  *currentContext = alcGetCurrentContext();
-    ALCdevice *device = alcGetContextsDevice(currentContext); 
+  if(OAL_STATE.is_load) {
+    ALCcontext  *context = OAL_STATE.context;
+    ALCdevice *device = alcGetContextsDevice(context); 
 
-    alcDestroyContext(currentContext);
+    alcDestroyContext(context);
     alcCloseDevice(device);
   }
 }
 
 
+void
+oal_interrupted() {
+  if(OAL_STATE.is_load) {
+    alcMakeContextCurrent(NULL);
+  }
+}
+
+void
+oal_resumed() {
+  if(OAL_STATE.is_load) {
+    alcMakeContextCurrent(OAL_STATE.context);
+  }
+}
+
 int
 luaopen_oal(lua_State* L) {
   (void)(_free_oal);  // unused
 
-  // init openal
-  if (!_is_load) {
-    _init_openal(L);
-    _is_load = true;
-  }
-
+  _init_openal(L);
+  
   // set lib
   luaL_checkversion(L);
   luaL_Reg l[] = {
