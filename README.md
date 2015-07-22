@@ -52,6 +52,7 @@ read [`t.lua`](https://github.com/lvzixun/Liekkas/blob/master/test/t.lua) for mo
   music.load(file_path)          -- preload a music sound
   music.play(file_path, loop)    -- play a music sound, will load audio file when not load.
   music.stop()                   -- stop the current playing music sound
+  
   music.open()                   -- open background music
   music.close()                  -- close background music
 ~~~
@@ -67,6 +68,7 @@ read [`t.lua`](https://github.com/lvzixun/Liekkas/blob/master/test/t.lua) for mo
   group1:stop(handle)    -- stop sound
   group1:rewind(handle)  -- rewind sound
   group1:pause(handle)   -- pause sound
+
   group1:open()          -- open group all sound
   group1:close()         -- stop and close group all sound
 ~~~
