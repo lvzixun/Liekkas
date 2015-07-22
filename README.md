@@ -31,9 +31,9 @@ a simple audio wrapper libary base on OpenAL. inspired by [Liekkas](http://music
 ## tutorial
 ```
 $ make
-$ lua t.lua
+$ make sound_test
 ```
-read [`t.lua`](https://github.com/lvzixun/Liekkas/blob/master/t.lua) for more detail.
+read [`t.lua`](https://github.com/lvzixun/Liekkas/blob/master/test/t.lua) for more detail.
 
 ## LUA API
  simple effect sound API
@@ -67,7 +67,7 @@ read [`t.lua`](https://github.com/lvzixun/Liekkas/blob/master/t.lua) for more de
   group1:pause(handle)  -- pause sound
 ~~~
 
-read [`audio.lua`](https://github.com/lvzixun/Liekkas/blob/master/audio.lua) wrapper file for more detail.
+read [`audio.lua`](https://github.com/lvzixun/Liekkas/blob/master/src/bind/audio.lua) wrapper file for more detail.
 
 ## interrupt interface
 ~~~.c
