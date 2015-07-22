@@ -91,6 +91,7 @@ function M:create_group(source_count)
     source_count = source_count,
     source_list = {},
     cur_indx = 1,
+    is_close = false,
   }
 
   local source_list = raw.source_list
@@ -165,6 +166,10 @@ end
 
 
 local function _audio_op(self, op, handle)
+  if self.is_close then 
+    return 
+  end
+
   local idx, version = _unpack_handle(handle)
   local group_handle = self.source_list[idx]
 
@@ -172,7 +177,7 @@ local function _audio_op(self, op, handle)
      group_handle.version ~= version or 
      not M.load_map[group_handle.file]
     then
-    print("_audio_op false:", op, handle, version, group_handle.version)
+    -- print("_audio_op false:", op, handle, version, group_handle.version)
     return false 
   end
 
@@ -184,6 +189,18 @@ end
 
 function group_mt:stop(handle)
   return _audio_op(self, "stop", handle)
+end
+
+
+function group_mt:open()
+  self.is_close = false
+end
+
+function group_mt:close()
+  for i,handle in ipairs(self.source_list) do
+    handle.source_id:stop()
+  end
+  self.is_close = true
 end
 
 

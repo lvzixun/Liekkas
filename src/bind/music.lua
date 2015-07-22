@@ -1,7 +1,11 @@
 local audio = require "audio"
 local ad = require "oal.decode"
 
-local M = {}
+local M = {
+  is_close = false,
+  _cur_playing_file_path = false,
+  _cur_loop = false,
+}
 
 local function _gen_ios_hd_func()
   local cur_file_path = false
@@ -49,7 +53,7 @@ local function _gen_oal_hd_func()
 
   function m.stop()
     if music_handle then
-      music_handle:stop()  
+      music_group:stop(music_handle)
     end
   end
 
@@ -73,13 +77,34 @@ function M.load(file_path)
 end
 
 function M.play(file_path, loop)
+  M._cur_playing_file_path = file_path
+  M._cur_loop = loop
+  
+  if M.is_close then
+    return
+  end
   _cur_bg_handle.play(file_path, loop)
 end
 
+
 function M.stop()
-  _cur_bg_handle.stop(self)
+  _cur_bg_handle.stop()
 end
 
+
+function M.open()
+  local file_path = M._cur_playing_file_path
+  local loop = M._cur_loop
+  M.is_close = false
+  if file_path then
+    _cur_bg_handle.play(file_path, loop)
+  end
+end
+
+function M.close()
+  _cur_bg_handle.stop()
+  M.is_close = true
+end
 
 
 return M

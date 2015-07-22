@@ -18,6 +18,12 @@ function M:play(file_path, loop, pitch, pan, gain)
   sound_group:play(handle)
 end
 
+function M:open()
+  return sound_group:open()
+end
 
+function M:close()
+  return sound_group:close()
+end
 
 return M
