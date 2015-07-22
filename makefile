@@ -2,12 +2,12 @@
 
 UNAME = $(shell uname)
 
-OAL_SOURCE = oal.c \
-	oal_decode.c \
-	decode/ad_caf.c \
-	decode/ad_mp3.c \
-	decode/ad_wav.c \
-	decode/ad_hardware_mac_ios.m
+OAL_SOURCE = src/oal.c \
+	src/oal_decode.c \
+	src/decode/ad_caf.c \
+	src/decode/ad_mp3.c \
+	src/decode/ad_wav.c \
+	src/decode/ad_hardware_mac_ios.m
 
 ifeq ($(UNAME), Darwin)
 	CC = clang
@@ -31,6 +31,8 @@ OAL_LIB = oal.$(LIB_SUFFIX)
 
 all: $(TARGET)
 
+sound_test:
+	LUA_PATH=$(shell pwd)/src/bind/?.lua  lua test/t.lua
 
 $(TEST_EXE): $(OAL_SOURCE) test.c
 	$(CC) $(FLAG) -o $@ $^ $(MACRO)

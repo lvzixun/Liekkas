@@ -16,14 +16,14 @@ end
 
 
 local _sound = {
-  "sound/air_trap.mp3",
-  "sound/alliance_build_drop_04.caf",
-  "sound/alliance_jingle_v2.mp3",
+  "test/sound/air_trap.mp3",
+  "test/sound/alliance_build_drop_04.caf",
+  "test/sound/alliance_jingle_v2.mp3",
 }
 
 local _music = {
-  "sound/winwinwin.mp3",
-  "sound/battle_lost_02.mp3",
+  "test/sound/winwinwin.mp3",
+  "test/sound/battle_lost_02.mp3",
 }
 
 
