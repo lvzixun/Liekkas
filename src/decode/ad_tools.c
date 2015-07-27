@@ -118,7 +118,7 @@ adl_decode_tools(lua_State* L) {
   const char* type = lua_tostring(L, 2);
   struct oal_info out = {0};
   if(_decode_tools(file, &out)){
-    out.type = type;
+    strncpy(out.type, type, sizeof(out.type)-1);
     return ad_new_info(L, &out);
   } else {
     luaL_error(L, ad_last_error());

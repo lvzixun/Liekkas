@@ -12,7 +12,7 @@ struct oal_info {
   ALsizei size;
   ALenum format;
   ALsizei freq;
-  const char* type; // caf, mp3 ...etc
+  char type[8]; // caf, mp3 ...etc
 };
 void od_free_info(struct oal_info* info);
 

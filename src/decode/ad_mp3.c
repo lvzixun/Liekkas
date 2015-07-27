@@ -113,7 +113,7 @@ _decode_mp3(const char* filepath, struct oal_info* out) {
     ad_error("mpg123_read error: %s", filepath);
     goto EXIT;
   }else {
-    out->type = "mp3";
+    strcpy(out->type, "mp3");
     out->data = buffer;
     out->size = done;    
   }

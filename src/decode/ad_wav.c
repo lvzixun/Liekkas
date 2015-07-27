@@ -146,7 +146,7 @@ _decode_wav (const char* filepath, struct oal_info* out) {
   check(_read_buffer(fp, buffer, data_fmt.subchunk_sz), "read buffer error");
 
   //
-  out->type = "wav";
+  strcpy(out->type, "wav");
   out->freq = wav_fmt.sample_rate;
   out->data = buffer;
   out->size = data_fmt.subchunk_sz;
