@@ -4,12 +4,12 @@
 #include <stdlib.h>
 
 
-#ifdef SUPPORT_AUDIO_CAF
+#ifdef SUPPORT_AUDIO_TOOLS
 #import <AudioToolbox/AudioToolbox.h>
 #import <AudioToolbox/ExtendedAudioFile.h>
 
 static struct oal_info* 
-_decode_caf (const char* filepath, struct oal_info* out) {
+_decode_tools (const char* filepath, struct oal_info* out) {
   struct oal_info* ret = NULL;
   OSStatus status = noErr;
   ExtAudioFileRef extRef = NULL;
@@ -89,7 +89,6 @@ _decode_caf (const char* filepath, struct oal_info* out) {
     out->size = (ALsizei)data_size;
     out->format = (output_format.mChannelsPerFrame > 1) ? AL_FORMAT_STEREO16 : AL_FORMAT_MONO16;
     out->freq = (ALsizei)output_format.mSampleRate;
-    out->type = "caf";
   } else {
     // failure
     free(data);
@@ -104,19 +103,22 @@ EXIT:
   return ret; 
 }
 #else
+
 static struct oal_info* 
-_decode_caf (const char* filepath, struct oal_info* out) {
-  ad_error("no support caf");
+_decode_tools (const char* filepath, struct oal_info* out) {
+  ad_error("no support audio tools");
   return NULL;
 }
 #endif
 
 
 int
-adl_decode_caf(lua_State* L) {
+adl_decode_tools(lua_State* L) {
   const char* file = lua_tostring(L, 1);
+  const char* type = lua_tostring(L, 2);
   struct oal_info out = {0};
-  if(_decode_caf(file, &out)){
+  if(_decode_tools(file, &out)){
+    out.type = type;
     return ad_new_info(L, &out);
   } else {
     luaL_error(L, ad_last_error());

@@ -31,7 +31,7 @@ end
 
 local support_type = {
   ["caf"] = function (file_path)
-    return ad.decode_caf(file_path)
+    return ad.decode_tools(file_path, "caf")
   end,
   ["mp3"] = function (file_path)
     return ad.decode_mp3(file_path)

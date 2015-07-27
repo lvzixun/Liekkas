@@ -4,7 +4,7 @@ UNAME = $(shell uname)
 
 OAL_SOURCE = src/oal.c \
 	src/oal_decode.c \
-	src/decode/ad_caf.c \
+	src/decode/ad_tools.c \
 	src/decode/ad_mp3.c \
 	src/decode/ad_wav.c \
 	src/decode/ad_hardware_mac_ios.m
@@ -12,7 +12,7 @@ OAL_SOURCE = src/oal.c \
 ifeq ($(UNAME), Darwin)
 	CC = clang
 	FLAG = -fPIC -Wall -g -dynamiclib -Wl,-undefined,dynamic_lookup
-	MACRO = -DSUPPORT_AUDIO_MP3 -DSUPPORT_AUDIO_CAF
+	MACRO = -DSUPPORT_AUDIO_MP3 -DSUPPORT_AUDIO_TOOLS
 	FRAMEWORK = -framework OpenAL -framework AudioToolbox  -framework AVFoundation  -lmpg123
 	LIB_SUFFIX = so
 	TARGET = $(OAL_LIB)
