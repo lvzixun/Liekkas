@@ -34,6 +34,7 @@ _decode_tools (const char* filepath, struct oal_info* out) {
     goto EXIT;
   }
 
+  printf("file_format.mChannelsPerFrame: %d\n", file_format.mChannelsPerFrame);
   if(file_format.mChannelsPerFrame > 2) {
     ad_error("Unsupported Format, channel count is greater than stereo");
     goto EXIT;

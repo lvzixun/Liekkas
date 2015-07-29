@@ -34,7 +34,7 @@ local support_type = {
     return ad.decode_tools(file_path, "caf")
   end,
   ["mp3"] = function (file_path)
-    return ad.decode_mp3(file_path)
+    return ad.decode_tools(file_path, "mp3")
   end,
   ["wav"] = function (file_path)
     return ad.decode_wav(file_path)
@@ -77,6 +77,11 @@ function M:unload(file_path)
   end
 
   self.load_map[file_path] = nil
+end
+
+
+function M:listen_position(x, y, z)
+  oal.listen_position(x, y, z)
 end
 
 
@@ -136,9 +141,9 @@ function group_mt:_get_source_handle()
 end
 
 
-function group_mt:add(file_path, loop, pitch, pan, gain)
+function group_mt:add(file_path, loop, pitch, gain, max_distance)
   pitch = pitch or 1.0
-  pan = pan or 0.0
+  max_distance = max_distance or 100.0
   gain = gain or 1.0
   loop = loop or false
 
@@ -159,13 +164,13 @@ function group_mt:add(file_path, loop, pitch, pan, gain)
     end
     playing_source[file_path][source_id] = true
 
-    oal.source_set(source_id, entry.buffer_id, pitch, pan, gain, loop)
+    oal.source_set(source_id, entry.buffer_id, pitch, max_distance, gain, loop)
     return _gen_handle(group_handle.idx, version)
   end
 end
 
 
-local function _audio_op(self, op, handle)
+local function _audio_op(self, op, handle, ...)
   if self.is_close then 
     return 
   end
@@ -182,7 +187,7 @@ local function _audio_op(self, op, handle)
   end
 
   local source_id = group_handle.source_id
-  source_id[op](source_id)
+  source_id[op](source_id, ...)
   return true
 end
 
@@ -217,6 +222,17 @@ end
 function group_mt:play(handle)
   return _audio_op(self, "play", handle)
 end
+
+
+function group_mt:position(handle, x, y, z)
+  return _audio_op(self, "position", handle, x, y, z)
+end
+
+
+function group_mt:volume(handle, v)
+  return _audio_op(self, "volume", handle, v)
+end
+
 
 return M
 

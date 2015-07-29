@@ -13,9 +13,10 @@ function M:unload(file_path)
   return audio:unload(file_path)
 end
 
-function M:play(file_path, loop, pitch, pan, gain)
-  local handle  = sound_group:add(file_path, loop, pitch, pan, gain)
+function M:play(file_path, loop, pitch, gain)
+  local handle  = sound_group:add(file_path, loop, pitch, gain)
   sound_group:play(handle)
+  return handle
 end
 
 function M:open()

@@ -14,6 +14,8 @@
 #define OAL_RATE_BASIC 8000
 #define OAL_RATE_DEFAULT 44100
 
+#define unused(v) (void)(v)
+
 struct _oal_state {
   ALCcontext* context;
   bool is_load;
@@ -42,6 +44,7 @@ _init_openal(lua_State* L) {
     return;
 
   alcMacOSXMixerOutputRateProc(OAL_RATE_DEFAULT);
+
 
   ALCcontext* context = NULL;
   ALCdevice* new_device = NULL;
@@ -89,6 +92,27 @@ l_free_source(lua_State* L) {
   }
   return 0;
 }
+
+static int
+l_source_volume(lua_State* L) {
+  ALuint source_id = *((ALuint*)lua_touserdata(L, 1));
+  lua_Number v = lua_tonumber(L, 2);
+
+  alSourcef(source_id, AL_GAIN, v);
+  return 0;
+}
+
+static int
+l_source_position(lua_State* L) {
+  ALuint source_id = *((ALuint*)lua_touserdata(L, 1));
+  lua_Number x = lua_tonumber(L, 2);
+  lua_Number y = lua_tonumber(L, 3);
+  lua_Number z = lua_tonumber(L, 4);
+
+  alSource3f(source_id, AL_POSITION, x, y, z);
+  return 0;
+}
+
 
 static int
 l_source_state(lua_State* L) {
@@ -158,6 +182,8 @@ _new_source(lua_State* L, ALuint source_id) {
       {"rewind", l_rewind_source},
       {"pause", l_pause_source},
       {"state", l_source_state},
+      {"volume", l_source_volume},
+      {"position", l_source_position},
       {NULL, NULL},
     };
     luaL_newlib(L, l);
@@ -266,11 +292,22 @@ l_bind_buffer(lua_State* L) {
 }
 
 static int
+l_listen_position(lua_State* L) {
+  lua_Number x = lua_tonumber(L, 1);
+  lua_Number y = lua_tonumber(L, 2);
+  lua_Number z = lua_tonumber(L, 3);
+
+  alListener3f(AL_POSITION, x, y, z);
+  return 0;
+}
+
+
+static int
 l_set(lua_State* L) {
   ALuint source_id = *((ALuint*)lua_touserdata(L, 1));
   ALuint buffer_id = *((ALuint*)lua_touserdata(L, 2));
   lua_Number pitch = lua_tonumber(L, 3);
-  lua_Number pan = lua_tonumber(L, 4);
+  lua_Number max_distance = lua_tonumber(L, 4);
   lua_Number gain = lua_tonumber(L, 5);
   int loop = lua_toboolean(L, 6);
 
@@ -284,12 +321,11 @@ l_set(lua_State* L) {
     alSourceStop(source_id);
   }
 
-  alSourcei(source_id, AL_BUFFER, buffer_id);
   alSourcef(source_id, AL_PITCH, pitch);
   alSourcei(source_id, AL_LOOPING, loop);
   alSourcef(source_id, AL_GAIN, gain);
-  float sourcePosAL[] = {pan, 0.0f, 0.0f}; //Set position - just using left and right panning
-  alSourcefv(source_id, AL_POSITION, sourcePosAL);
+  alSourcei(source_id, AL_MAX_DISTANCE, max_distance);
+  alSourcei(source_id, AL_BUFFER, buffer_id);
 
   err = alGetError();
   if(err == AL_NO_ERROR) {
@@ -332,7 +368,7 @@ oal_resumed() {
 
 int
 luaopen_oal(lua_State* L) {
-  (void)(_free_oal);  // unused
+  unused(_free_oal);  // unused
 
   _init_openal(L);
   
@@ -343,6 +379,7 @@ luaopen_oal(lua_State* L) {
     {"create_bufferid", l_create_bufferid},
     {"buffer_bind", l_bind_buffer},
     {"source_set", l_set},
+    {"listen_position", l_listen_position},
     {NULL, NULL},
   };
 
