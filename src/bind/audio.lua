@@ -55,7 +55,7 @@ function M:load(file_path, file_type)
     local buffer_id = oal.create_bufferid()
     oal.buffer_bind(buffer_id, info)
     entry = {
-      info = info,
+      -- info = info,  -- for collect garbage
       buffer_id = buffer_id,
     }
     self.load_map[file_path] = entry
