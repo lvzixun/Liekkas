@@ -1,4 +1,6 @@
 local oal = require "oal"
+local source_state = oal.source_state
+
 local ad = require "oal.decode"
 
 
@@ -82,6 +84,21 @@ end
 
 function M:listen_position(x, y, z)
   oal.listen_position(x, y, z)
+end
+
+
+function M:cur_playing_count(file_path)
+  local count = 0
+  local playing_source = M.playing_source
+  local info = playing_source[file_path]
+  if info then
+    for source_id, v in pairs(info) do
+      if v and source_id:state() == source_state.playing then
+        count = count + 1
+      end
+    end
+  end
+  return count
 end
 
 
