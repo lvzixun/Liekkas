@@ -7,6 +7,7 @@ int adl_decode_mp3(lua_State* L);
 int adl_decode_hardware_ios(lua_State* L);
 int adl_decode_wav(lua_State* L);
 int adl_decode_tools(lua_State* L);
+int adl_decode_ogg(lua_State* L);
 
 
 
@@ -71,6 +72,7 @@ luaopen_oal_decode(lua_State* L) {
     {"decode_tools", adl_decode_tools},
     {"decode_mp3", adl_decode_mp3},
     {"decode_wav", adl_decode_wav},
+    {"decode_ogg", adl_decode_ogg},
     {NULL, NULL},
   };
 

@@ -41,6 +41,9 @@ local support_type = {
   ["wav"] = function (file_path)
     return ad.decode_wav(file_path)
   end,
+  ["ogg"] = function (file_path)
+    return ad.decode_ogg(file_path)
+  end,
 }
 
 function M:load(file_path, file_type)
