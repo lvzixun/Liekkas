@@ -18,14 +18,15 @@ a simple audio wrapper libary base on OpenAL. inspired by [Liekkas](http://music
 | CAF | done |
 | mp3 | done |
 | wav | done |
-| ogg | working |
+| ogg | done |
 
 ## require 
 
 1. OpenAL
-2. mpg123  (if you want support mp3)
-3. mingw32 (window need)
-4. lua (>=lua5.2)
+2. mpg123    (if you want support mp3)
+3. libvorbis (if you want support ogg)
+4. mingw32   (window need)
+5. lua (>=lua5.2)
 
 
 ## tutorial
