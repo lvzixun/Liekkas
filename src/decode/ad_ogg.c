@@ -1,4 +1,4 @@
-#include "../oal_decode.h"
+#include "../lk_decode.h"
 
 #include <assert.h>
 #include <string.h>
@@ -11,30 +11,27 @@
 
 static bool
 _decode_ogg(const char* filepath, struct oal_info* out) {
-  FILE* fp = fopen(filepath, "r");
+  struct util_fp* fp = util_file_open(filepath);
   if(!fp){
-    fclose(fp);
+    util_file_close(fp);
     return false;
   }
 
   OggVorbis_File ogg_file;
-  int status = ov_test(fp, &ogg_file, 0, 0);
+  ov_callbacks callbacks = {
+    (size_t (*)(void *, size_t, size_t, void *))  util_file_read,
+    (int (*)(void *, ogg_int64_t, int))           util_file_seek,
+    (int (*)(void *))                             util_file_close,
+    (long (*)(void *))                            util_file_size,
+  };
+  int status = ov_open_callbacks(fp, &ogg_file, 0, 0, callbacks);
   if(status != 0){
-    fclose(fp);
+    util_file_close(fp);
     ov_clear(&ogg_file);
-    ad_error("test decode ogg:%s error", filepath);
+    ad_error("open ogg:%s error", filepath);
     return false;
   }
 
-  status = ov_test_open(&ogg_file);
-  if(status != 0) {
-    fclose(fp);
-    ad_error("test open ogg:%s error", filepath);
-    return false;
-  }
-
-  // As vorbis documentation says, we should not fclose() file
-  // after successful opening by vorbis functions.
   vorbis_info* info = ov_info(&ogg_file, -1);
   ALenum  format = (info->channels == 1) ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16;
 
@@ -67,6 +64,7 @@ _decode_ogg(const char* filepath, struct oal_info* out) {
   return true;
 
 EXIT:
+  if(fp) util_file_close(fp);
   if(data) free(data);
   return false;
 }

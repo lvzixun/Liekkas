@@ -4,8 +4,9 @@ UNAME = $(shell uname)
 
 
 
-OAL_SOURCE = src/oal.c \
-	src/oal_decode.c \
+OAL_SOURCE = src/openal/oal.c \
+	src/lk_decode.c \
+	src/lk_util.c \
 	src/decode/ad_tools.c \
 	src/decode/ad_mp3.c \
 	src/decode/ad_wav.c \

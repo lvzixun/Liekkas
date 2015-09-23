@@ -6,7 +6,7 @@
 #include <lua.h>
 #include <lauxlib.h>
 
-#include "oal_decode.h"
+#include "../lk_decode.h"
 
 #define OAL_RATE_HIGH 44100
 #define OAL_RATE_MID  22050

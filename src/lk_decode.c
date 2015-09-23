@@ -1,4 +1,4 @@
-#include "oal_decode.h"
+#include "lk_decode.h"
 #include <stdlib.h>
 
 
@@ -47,6 +47,13 @@ _info_tostring(lua_State* L) {
   return 1;
 }
 
+static int
+_info_dump(lua_State* L) {
+  struct oal_info* p = (struct oal_info*)lua_touserdata(L, 1);
+  lua_pushlstring(L, p->data, p->size);
+  return 1;
+}
+
 
 int
 ad_new_info(lua_State* L, struct oal_info* info) {
@@ -73,6 +80,7 @@ luaopen_oal_decode(lua_State* L) {
     {"decode_mp3", adl_decode_mp3},
     {"decode_wav", adl_decode_wav},
     {"decode_ogg", adl_decode_ogg},
+    {"info_dump", _info_dump},
     {NULL, NULL},
   };
 

@@ -1,4 +1,4 @@
-#include "../oal_decode.h"
+#include "../lk_decode.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -38,16 +38,16 @@ struct wav_data {
 };
 
 static bool
-_read_buffer(FILE* fp, uint8_t* out_buffer, size_t sz) {
-  size_t ret = fread(out_buffer, 1, sz, fp);
+_read_buffer(struct util_fp* fp, uint8_t* out_buffer, size_t sz) {
+  size_t ret = util_file_read(out_buffer, 1, sz, fp);
   return ret==sz;
 }
 
 
 static bool
-_read_short(FILE* fp, uint16_t* out_val) {
+_read_short(struct util_fp* fp, uint16_t* out_val) {
     uint8_t buff[2];
-    size_t ret = fread(buff, 1, 2, fp);
+    size_t ret = util_file_read(buff, 1, 2, fp);
     if(ret==2){
       *out_val = ((uint16_t)(buff[1]))<<8;
       *out_val |= ((uint16_t)(buff[0]));
@@ -57,9 +57,9 @@ _read_short(FILE* fp, uint16_t* out_val) {
 }
 
 static bool
-_read_int(FILE* fp, uint32_t* out_val) {
+_read_int(struct util_fp* fp, uint32_t* out_val) {
   uint8_t buff[4];
-  size_t ret = fread(buff, 1, 4, fp);
+  size_t ret = util_file_read(buff, 1, 4, fp);
   if(ret==4){
     *out_val = ((uint32_t)(buff[3]))<<24;
     *out_val |= ((uint32_t)(buff[2]))<<16;
@@ -71,7 +71,7 @@ _read_int(FILE* fp, uint32_t* out_val) {
 }
 
 static bool
-_read_riff(FILE* fp, struct riff_header* out_val) {
+_read_riff(struct util_fp* fp, struct riff_header* out_val) {
   if(_read_buffer(fp, out_val->chunk_id, 4)        &&
      _read_int(fp, &(out_val->chunk_sz))           &&
      _read_buffer(fp, out_val->format, 4)          &&
@@ -83,7 +83,7 @@ _read_riff(FILE* fp, struct riff_header* out_val) {
 }
 
 static bool
-_read_wave_foramt(FILE* fp, struct wav_format* out_val) {
+_read_wave_foramt(struct util_fp* fp, struct wav_format* out_val) {
     if(_read_buffer(fp, out_val->subchunk_id, 4)          &&
        _read_int(fp, &out_val->subchunk_sz)               &&
        _read_short(fp, &out_val->audio_format)            &&
@@ -99,7 +99,7 @@ _read_wave_foramt(FILE* fp, struct wav_format* out_val) {
 }
 
 static bool
-_read_wave_data(FILE* fp, struct wav_data* out_val) {
+_read_wave_data(struct util_fp* fp, struct wav_data* out_val) {
   if(_read_buffer(fp, out_val->subchunk_id, 4)   && 
      _read_int(fp, &out_val->subchunk_sz)        ){
       return true;
@@ -112,11 +112,11 @@ static struct oal_info*
 _decode_wav (const char* filepath, struct oal_info* out) {
   struct oal_info* ret = NULL;
 
-  FILE* fp = NULL;
+  struct util_fp* fp = NULL;
   filepath = (filepath)?(filepath):("");
-  fp = fopen(filepath, "rb");
+  fp = util_file_open(filepath);
   if(!fp) {
-    ad_error("open file : %s error", filepath);
+    ad_error("open struct util_fp : %s error", filepath);
   }
 
   uint8_t* buffer = NULL;
@@ -136,7 +136,7 @@ _decode_wav (const char* filepath, struct oal_info* out) {
     if(memcmp(data_fmt.subchunk_id, "data", 4)==0){
       break;
     }else {
-      fseek(fp, data_fmt.subchunk_sz, SEEK_CUR); // jump not need chunk
+      util_file_seek(fp, data_fmt.subchunk_sz, SEEK_CUR); // jump not need chunk
     }
   }
   
@@ -177,7 +177,7 @@ _decode_wav (const char* filepath, struct oal_info* out) {
   ret = out;
 
 EXIT:
-  fclose(fp);
+  util_file_close(fp);
   if(buffer && !ret) free(buffer);
   return ret;
 }
