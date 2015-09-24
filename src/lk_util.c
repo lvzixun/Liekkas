@@ -6,13 +6,9 @@
 
 
 #ifdef __ANDROID__ 
-
-// for native asset manager
+#include "opensl/opensl.h"
 #include <fcntl.h>
 #include <sys/types.h>
-#include <android/asset_manager.h>
-#include <android/asset_manager_jni.h>
-
 
 struct util_fp {
     AAsset* asset;
@@ -26,7 +22,8 @@ struct util_fp {
 struct util_fp*
 util_file_open(const char* path) {
     struct util_fp* ret = NULL;
-    AAsset* asset = AAssetManager_open(ASSET_MGR, path, AASSET_MODE_UNKNOWN);
+    AAssetManager* mgr = sl_get_asset_mgr();
+    AAsset* asset = AAssetManager_open(mgr, path, AASSET_MODE_UNKNOWN);
     if(asset){
         ret = (struct util_fp*)malloc(sizeof(*ret));
         if(!ret)
@@ -35,6 +32,7 @@ util_file_open(const char* path) {
         ret->asset = asset;
         ret->data = AAsset_getBuffer(asset);
         ret->length = AAsset_getLength(asset);
+        return ret;
     }
 
 ERROR:
@@ -61,7 +59,7 @@ util_file_size(struct util_fp* handle) {
 size_t
 util_file_readall(struct util_fp* handle, unsigned char* buffer, size_t size) {
     size_t read_size = (size > handle->length)?(handle->length):(size);
-    memcpy(buffer, AAsset_getBuffer(handle->asset), read_size);
+    memcpy(buffer, handle->data, read_size);
     return read_size;
 }
 

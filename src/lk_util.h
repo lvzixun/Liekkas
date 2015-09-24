@@ -3,6 +3,8 @@
 
 #include <stdlib.h>
 
+#define unused(v) (void)(v)
+
 struct util_fp;
 struct util_fp* util_file_open(const char* path);
 void util_file_close(struct util_fp* handle);
