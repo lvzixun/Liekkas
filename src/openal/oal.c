@@ -14,8 +14,6 @@
 #define OAL_RATE_BASIC 8000
 #define OAL_RATE_DEFAULT 44100
 
-#define unused(v) (void)(v)
-
 struct _oal_state {
   ALCcontext* context;
   bool is_load;
@@ -262,7 +260,7 @@ _source_state(lua_State* L) {
 }
 
 static int
-l_create_bufferid(lua_State* L) {
+l_create_buffer(lua_State* L) {
   int err=AL_NO_ERROR;
   alGetError(); // clear error
   ALuint buffer_id;
@@ -367,7 +365,7 @@ oal_resumed() {
 }
 
 int
-luaopen_oal(lua_State* L) {
+luaopen_liekkase(lua_State* L) {
   unused(_free_oal);  // unused
 
   _init_openal(L);
@@ -376,7 +374,7 @@ luaopen_oal(lua_State* L) {
   luaL_checkversion(L);
   luaL_Reg l[] = {
     {"create_source", l_create_source},
-    {"create_bufferid", l_create_bufferid},
+    {"create_buffer", l_create_buffer},
     {"buffer_bind", l_bind_buffer},
     {"source_set", l_set},
     {"listen_position", l_listen_position},

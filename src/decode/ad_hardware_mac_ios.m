@@ -167,15 +167,5 @@ adl_decode_hardware_ios(lua_State* L) {
   return 1;
 }
 
-#else
-
-// no support hardware decode ios
-int
-adl_decode_hardware_ios(lua_State* L) {
-  lua_pushboolean(L, false);
-  return 1;
-}
-
 #endif
-
 

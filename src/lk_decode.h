@@ -20,5 +20,5 @@ const char*  ad_last_error();
 
 int ad_new_info(lua_State* L, struct oal_info* info);
 
-int luaopen_oal_decode(lua_State* L);
+int luaopen_liekkas_decode(lua_State* L);
 #endif

@@ -1,7 +1,7 @@
-local oal = require "oal"
+local oal = require "liekkas"
 local source_state = oal.source_state
 
-local ad = require "oal.decode"
+local ad = require "liekkas.decode"
 
 
 local SOURCE_LIMIT = 32
@@ -36,7 +36,7 @@ local support_type = {
     return ad.decode_tools(file_path, "caf")
   end,
   ["mp3"] = function (file_path)
-    return ad.decode_tools(file_path, "mp3")
+    return ad.decode_mp3(file_path, "mp3")
   end,
   ["wav"] = function (file_path)
     return ad.decode_wav(file_path)
@@ -57,7 +57,7 @@ function M:load(file_path, file_type)
   if not entry then
     local info = func(file_path)
     print("load: "..tostring(info))
-    local buffer_id = oal.create_bufferid()
+    local buffer_id = oal.create_buffer()
     oal.buffer_bind(buffer_id, info)
     entry = {
       -- info = info,  -- for collect garbage
@@ -202,7 +202,7 @@ local function _audio_op(self, op, handle, ...)
      group_handle.version ~= version or 
      not M.load_map[group_handle.file]
     then
-    -- print("_audio_op false:", op, handle, version, group_handle.version)
+    print("_audio_op false:", op, handle, version, group_handle.version)
     return false 
   end
 

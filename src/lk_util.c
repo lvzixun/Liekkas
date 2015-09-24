@@ -65,12 +65,13 @@ util_file_readall(struct util_fp* handle, unsigned char* buffer, size_t size) {
 
 size_t
 util_file_read(void* out_buffer, size_t size, size_t ntimes, struct util_fp* handle) {
-    off_t des_pos = handle->cur_pos;
+    off_t cur_pos = handle->cur_pos;
+    off_t des_pos = cur_pos;
     des_pos += size * ntimes;
     des_pos = (des_pos > handle->length)?(handle->length):(des_pos);
 
-    off_t n = des_pos - handle->cur_pos;
-    memcpy(out_buffer, handle->data+des_pos, n);
+    off_t n = des_pos - cur_pos;
+    memcpy(out_buffer, handle->data+cur_pos, n);
     handle->cur_pos = des_pos;
     return n;
 }

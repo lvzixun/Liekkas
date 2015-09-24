@@ -79,6 +79,7 @@ _read_riff(struct util_fp* fp, struct riff_header* out_val) {
      0==memcmp(out_val->format, "WAVE", 4)         ){
       return true;
   }
+
   return false;
 }
 
@@ -154,18 +155,18 @@ _decode_wav (const char* filepath, struct oal_info* out) {
   // set format
   if(wav_fmt.num_channels==1){
     if(wav_fmt.bits_per_sample==8)
-      out->format = AL_FORMAT_MONO8;
+      out->format = FORMAT_MONO8;
     else if(wav_fmt.bits_per_sample==16)
-      out->format = AL_FORMAT_MONO16;
+      out->format = FORMAT_MONO16;
     else {
       ad_error("not support format");
       goto EXIT;
     }
   }else if (wav_fmt.num_channels==2){
     if(wav_fmt.bits_per_sample==8)
-      out->format=AL_FORMAT_STEREO8;
+      out->format= FORMAT_STEREO8;
     else if(wav_fmt.bits_per_sample==16)
-      out->format=AL_FORMAT_STEREO16;
+      out->format= FORMAT_STEREO16;
     else{
      ad_error("not support format"); 
      goto EXIT;
