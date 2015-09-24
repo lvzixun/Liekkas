@@ -6,6 +6,9 @@ log:
 	adb logcat | grep ejoy
 
 build:
+	mkdir -p assets
+	cp -r jni/src/bind/*.lua assets/
+	cp -r ../test/sound ../test/android_test.lua  assets/
 	cd jni && ndk-build clean && ndk-build
 	ant debug
 
@@ -20,9 +23,6 @@ uninstall:
 
 
 run:
-	mkdir -p assets
-	cp -r jni/src/bind/*.lua assets/
-	cp -r ../test/sound assets/
 	adb shell am start -a android.intent.action.MAIN -n com.example.testaudio.TestAudio.MainActivity
 
 install: clean uninstall build

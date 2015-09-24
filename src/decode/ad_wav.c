@@ -118,6 +118,7 @@ _decode_wav (const char* filepath, struct oal_info* out) {
   fp = util_file_open(filepath);
   if(!fp) {
     ad_error("open struct util_fp : %s error", filepath);
+    goto EXIT;
   }
 
   uint8_t* buffer = NULL;

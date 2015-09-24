@@ -77,7 +77,7 @@ Java_com_example_testaudio_TestAudio_testInit(JNIEnv* env, jclass clazz) {
     luaL_openlibs(L);
     _register(L, l_util, "util");
     _register(L, luaopen_liekkas, "liekkas");
-    _register(L, luaopen_oal_decode, "liekkas.decode");
+    _register(L, luaopen_liekkas_decode, "liekkas.decode");
     lua_pushcfunction(L, traceback);
     int top = lua_gettop(L);
 
