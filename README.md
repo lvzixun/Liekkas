@@ -8,7 +8,7 @@ a simple audio wrapper libary base on OpenAL. inspired by [Liekkas](http://music
 | MAC OSX |  done |
 | window | done |
 | ios | done |
-| android |  working |
+| android |  done |
 | ubuntu |  working |
 
 
@@ -35,6 +35,12 @@ $ make
 $ make sound_test
 ```
 read [`t.lua`](https://github.com/lvzixun/Liekkas/blob/master/test/t.lua) for more detail.
+
+## android 
+```
+$ make android
+```
+read [`test_audio_jni.c`](https://github.com/lvzixun/Liekkas/blob/android/android/jni/test_audio_jni.c) and [`TestAudio.java`](https://github.com/lvzixun/Liekkas/blob/android/android/src/com/example/testaudio/TestAudio.java) for more detail.
 
 ## LUA API
  simple effect sound API
