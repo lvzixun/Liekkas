@@ -1,4 +1,4 @@
-.PHONY: clean sound_test
+.PHONY: clean sound_test android
 
 UNAME = $(shell uname)
 
@@ -67,6 +67,8 @@ bin:
 	-cp -r ../_3lib/mpg123-1.22.0-x86/*.dll ../bin
 	-cp $(TEST_EXE) ../bin
 
+android:
+	cd android && android update project --target 1 --path ./ && make build
 
 clean:
 	-rm -rf $(OAL_LIB)
