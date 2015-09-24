@@ -6,3 +6,13 @@
 mingw_oal
 cocos
 .DS_Store
+native-audio
+gen
+bin
+libs
+obj
+*.txt
+build.xml
+*.properties
+SLES
+assets
