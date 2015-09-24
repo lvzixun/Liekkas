@@ -1,0 +1,3 @@
+[submodule "src/lua"]
+	path = src/lua
+	url = https://github.com/ejoy/lua.git
