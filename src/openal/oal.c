@@ -365,7 +365,7 @@ oal_resumed() {
 }
 
 int
-luaopen_liekkase(lua_State* L) {
+luaopen_liekkas(lua_State* L) {
   unused(_free_oal);  // unused
 
   _init_openal(L);

@@ -4,9 +4,6 @@
 
 int adl_decode_caf(lua_State* L);
 int adl_decode_mp3(lua_State* L);
-#ifdef SUPPORT_AUDIO_HARDWARE_MAC_IOS
-int adl_decode_hardware_ios(lua_State* L);
-#endif
 int adl_decode_wav(lua_State* L);
 int adl_decode_tools(lua_State* L);
 int adl_decode_ogg(lua_State* L);
@@ -87,10 +84,6 @@ luaopen_liekkas_decode(lua_State* L) {
   };
 
   luaL_newlib(L, l);
-  #ifdef SUPPORT_AUDIO_HARDWARE_MAC_IOS
-    adl_decode_hardware_ios(L);
-    lua_setfield(L, -2, "decode_hardware_ios");
-  #endif
   return 1;
 }
 

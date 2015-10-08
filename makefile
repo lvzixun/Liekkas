@@ -11,7 +11,8 @@ OAL_SOURCE = src/openal/oal.c \
 	src/decode/ad_mp3.c \
 	src/decode/ad_wav.c \
 	src/decode/ad_ogg.c \
-	src/decode/ad_hardware_mac_ios.m
+	src/bgm/bgm_ios.m \
+	src/lk_bgm.c
 
 ifeq ($(UNAME), Darwin)
 	CC = clang
@@ -43,7 +44,7 @@ else
 	TARGET = $(TEST_EXE) bin
 endif
 
-OAL_LIB = oal.$(LIB_SUFFIX)
+OAL_LIB = liekkas.$(LIB_SUFFIX)
 
 
 all: $(TARGET)

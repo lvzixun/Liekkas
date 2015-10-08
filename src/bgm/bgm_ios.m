@@ -2,7 +2,6 @@
 
 #include <stdbool.h>
 
-#ifdef SUPPORT_AUDIO_HARDWARE_MAC_IOS
 #import <AVFoundation/AVFoundation.h>
 
 @class ADAudioSource;
@@ -153,7 +152,7 @@ l_pause(lua_State* L) {
 
 
 int
-adl_decode_hardware_ios(lua_State* L) {
+bgm_ios(lua_State* L) {
   luaL_checkversion(L);
   luaL_Reg l[] = {
     {"load", l_load},
@@ -166,6 +165,4 @@ adl_decode_hardware_ios(lua_State* L) {
   luaL_newlib(L, l);
   return 1;
 }
-
-#endif
 

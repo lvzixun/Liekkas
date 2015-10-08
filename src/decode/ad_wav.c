@@ -112,8 +112,9 @@ _read_wave_data(struct util_fp* fp, struct wav_data* out_val) {
 static struct oal_info* 
 _decode_wav (const char* filepath, struct oal_info* out) {
   struct oal_info* ret = NULL;
-
+  uint8_t* buffer = NULL;
   struct util_fp* fp = NULL;
+  
   filepath = (filepath)?(filepath):("");
   fp = util_file_open(filepath);
   if(!fp) {
@@ -121,7 +122,6 @@ _decode_wav (const char* filepath, struct oal_info* out) {
     goto EXIT;
   }
 
-  uint8_t* buffer = NULL;
   // read riff header
   struct riff_header riff;
   check(_read_riff(fp, &riff), "read riff header error");
