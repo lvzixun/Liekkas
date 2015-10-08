@@ -21,12 +21,11 @@ int
 luaopen_liekkas_bgm(lua_State* L) {
     luaL_checkversion(L);
     #ifdef PLATFORM_IOS
-    bgm_ios(L);
-    #elif PLATFORM_ANDROID 
-    bgm_android(L);
+    return bgm_ios(L);
+    #elif defined (PLATFORM_ANDROID)
+    return bgm_android(L);
     #else
     lua_pushboolean(L, 0);
-    #endif
-
     return 1;
+    #endif
 }

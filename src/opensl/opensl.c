@@ -24,6 +24,15 @@ struct sl_source {
 };
 
 
+struct sl_bgm {
+    SLObjectItf fdPlayerObject;
+    SLPlayItf fdPlayerPlay;
+    SLVolumeItf fdPlayerVolume;
+    SLSeekItf fdPlayerSeek;
+
+    char* file_name;
+};
+
 static struct {
     SLObjectItf engineObject;
     SLEngineItf engineEngine;
@@ -34,6 +43,8 @@ static struct {
 
     bool _is_init;
     SLresult last_error_code;
+
+    struct sl_bgm bgm;
 
     AAssetManager* asset_mgr;
 }ENV;
@@ -58,6 +69,9 @@ static struct {
 static void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context);
 static void  sl_destory();
 static bool  sl_init();
+static void _bgm_free(struct sl_bgm* bgm);
+
+
 // ------------------  opensl env -------------------------
 static bool 
 sl_init () {
@@ -138,6 +152,8 @@ sl_destory() {
             ENV.engineEngine = NULL;
             ENV.engineObject = NULL;
         }
+
+        _bgm_free(&ENV.bgm);
     }
 }
 
@@ -368,6 +384,135 @@ bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context) {
     if(source->is_loop) {
         sl_log("bqPlayerCallback!!! loop it!!!\n");
         _source_enqueue(source);
+    }
+}
+
+// -------------------- for background music --------------------
+static void
+_bgm_free(struct sl_bgm* bgm) {
+    if(bgm->file_name) {
+        free(bgm->file_name);
+        bgm->file_name = NULL;
+    }
+
+    if(bgm->fdPlayerObject) {
+        (*bgm->fdPlayerObject)->Destroy(bgm->fdPlayerObject);
+        bgm->fdPlayerObject = NULL;
+    }
+}
+
+static inline bool
+_bgm_is_init() {
+    return ENV._is_init && ENV.bgm.file_name && ENV.bgm.fdPlayerObject;
+}
+
+
+bool
+sl_bgm_load(const char* file_name) {
+    if(!file_name) {
+        return false;
+    }
+
+    struct sl_bgm* bgm = &(ENV.bgm);
+    if(bgm->file_name && strcmp(file_name, bgm->file_name) == 0) {
+        SLresult result = (*bgm->fdPlayerPlay)->SetPlayState(bgm->fdPlayerPlay, SL_PLAYSTATE_STOPPED);
+        return result == SL_RESULT_SUCCESS;
+    }
+
+    _bgm_free(bgm);
+    bgm->file_name = strdup(file_name);
+    if(bgm->file_name == NULL) {
+        return false;
+    }
+
+    AAsset* asset = AAssetManager_open(ENV.asset_mgr, file_name, AASSET_MODE_UNKNOWN);
+    if(asset == NULL) {
+        goto ERROR;
+    }
+
+    // open asset as file descriptor
+    off_t start, length;
+    int fd = AAsset_openFileDescriptor(asset, &start, &length);
+    AAsset_close(asset);
+    if(fd < 0) {
+        goto ERROR;
+    }
+
+
+    // configure audio source
+    SLDataLocator_AndroidFD loc_fd = {SL_DATALOCATOR_ANDROIDFD, fd, start, length};
+    SLDataFormat_MIME format_mime = {SL_DATAFORMAT_MIME, NULL, SL_CONTAINERTYPE_UNSPECIFIED};
+    SLDataSource audioSrc = {&loc_fd, &format_mime};
+
+    // configure audio sink
+    SLDataLocator_OutputMix loc_outmix = {SL_DATALOCATOR_OUTPUTMIX, ENV.outputMixObject};
+    SLDataSink audioSnk = {&loc_outmix, NULL};
+
+    // create audio player
+    SLresult result;
+    const SLInterfaceID ids[3] = {SL_IID_SEEK, SL_IID_MUTESOLO, SL_IID_VOLUME};
+    const SLboolean req[3] = {SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE};
+    result = (*ENV.engineEngine)->CreateAudioPlayer(ENV.engineEngine, &bgm->fdPlayerObject, &audioSrc, &audioSnk,
+            3, ids, req);
+    _check_result(result);
+
+
+    // realize the player
+    result = (*bgm->fdPlayerObject)->Realize(bgm->fdPlayerObject, SL_BOOLEAN_FALSE);
+    _check_result(result);
+
+    // get the play interface
+    result = (*bgm->fdPlayerObject)->GetInterface(bgm->fdPlayerObject, SL_IID_PLAY, &bgm->fdPlayerPlay);
+    _check_result(result);
+
+    // get the seek interface
+    result = (*bgm->fdPlayerObject)->GetInterface(bgm->fdPlayerObject, SL_IID_SEEK, &bgm->fdPlayerSeek);
+    _check_result(result);
+
+    // get the volume interface
+    result = (*bgm->fdPlayerObject)->GetInterface(bgm->fdPlayerObject, SL_IID_VOLUME, &bgm->fdPlayerVolume);
+    _check_result(result);
+
+    // enable whole file looping
+    result = (*bgm->fdPlayerSeek)->SetLoop(bgm->fdPlayerSeek, SL_BOOLEAN_FALSE, 0, SL_TIME_UNKNOWN);
+    _check_result(result);
+
+    // set bgm stop
+    result = (*bgm->fdPlayerPlay)->SetPlayState(bgm->fdPlayerPlay, SL_PLAYSTATE_STOPPED);
+    _check_result(result);
+
+    return true;
+
+ERROR:
+    _bgm_free(bgm);
+    return false;
+}
+
+void
+sl_bgm_play(bool is_loop) {
+    struct sl_bgm* bgm = &ENV.bgm;
+    if(_bgm_is_init()) {
+        (*bgm->fdPlayerSeek)->SetLoop(bgm->fdPlayerSeek, 
+            (is_loop)?(SL_BOOLEAN_TRUE):(SL_BOOLEAN_FALSE), 0, SL_TIME_UNKNOWN);
+        (*bgm->fdPlayerPlay)->SetPlayState(bgm->fdPlayerPlay, SL_PLAYSTATE_STOPPED);
+        (*bgm->fdPlayerPlay)->SetPlayState(bgm->fdPlayerPlay, SL_PLAYSTATE_PLAYING);
+    }
+}
+
+void
+sl_bgm_stop() {
+    struct sl_bgm* bgm = &ENV.bgm;
+    if(_bgm_is_init()) {
+        (*bgm->fdPlayerPlay)->SetPlayState(bgm->fdPlayerPlay, SL_PLAYSTATE_STOPPED);
+    }
+}
+
+
+void
+sl_bgm_pause() {
+    struct sl_bgm* bgm = &ENV.bgm;
+    if(_bgm_is_init()) {
+        (*bgm->fdPlayerPlay)->SetPlayState(bgm->fdPlayerPlay, SL_PLAYSTATE_PAUSED);
     }
 }
 

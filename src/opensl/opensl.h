@@ -43,4 +43,9 @@ void sl_buffer_data(struct sl_buffer* buffer, const void* data, size_t size);
 
 void sl_buffer_free(struct sl_buffer* buffer);
 
+bool sl_bgm_load(const char* file_name);
+void sl_bgm_play(bool is_loop);
+void sl_bgm_stop();
+void sl_bgm_pause();
+
 #endif

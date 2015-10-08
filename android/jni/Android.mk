@@ -55,7 +55,7 @@ LUA_SOURCE := $(addprefix src/lua/src/,\
 	lzio.c \
 	)
 
-# fot opensl and decode
+# for opensl and decode
 LIEKKAS_SOURCE := src/lk_decode.c \
 	src/lk_util.c \
 	src/opensl/opensl.c \
@@ -63,7 +63,8 @@ LIEKKAS_SOURCE := src/lk_decode.c \
 	src/decode/ad_mp3.c \
 	src/decode/ad_ogg.c \
 	src/decode/ad_tools.c \
-	src/decode/ad_wav.c
+	src/decode/ad_wav.c \
+	src/lk_bgm.c
 
 
 # fot test audio

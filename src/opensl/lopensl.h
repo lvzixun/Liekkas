@@ -6,5 +6,5 @@
 
 
 int luaopen_liekkas(lua_State* L);
-
+int bgm_android(lua_State* L);
 #endif
