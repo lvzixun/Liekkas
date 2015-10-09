@@ -34,7 +34,7 @@ a simple audio wrapper libary base on OpenAL. inspired by [Liekkas](http://music
 $ make
 $ make sound_test
 ```
-read [`t.lua`](https://github.com/lvzixun/Liekkas/blob/master/test/t.lua) for more detail.
+read [`t.lua`](https://github.com/lvzixun/Liekkas/blob/android/test/t.lua) for more detail.
 
 ## android 
 ```
@@ -92,7 +92,7 @@ read [`test_audio_jni.c`](https://github.com/lvzixun/Liekkas/blob/android/androi
   group1:close()         -- stop and close group all sound
 ~~~
 
-read [`audio.lua`](https://github.com/lvzixun/Liekkas/blob/master/src/bind/audio.lua) wrapper file for more detail.
+read [`audio.lua`](https://github.com/lvzixun/Liekkas/blob/android/src/bind/audio.lua) wrapper file for more detail.
 
 ## interrupt interface
 ~~~.c
