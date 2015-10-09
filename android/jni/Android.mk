@@ -64,6 +64,7 @@ LIEKKAS_SOURCE := src/lk_decode.c \
 	src/decode/ad_ogg.c \
 	src/decode/ad_tools.c \
 	src/decode/ad_wav.c \
+	src/bgm/bgm_android.c \
 	src/lk_bgm.c
 
 
