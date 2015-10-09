@@ -1,5 +1,6 @@
 #include "lua.h"
 #include "lauxlib.h"
+#include "../lk_decode.h"
 
 #include <stdbool.h>
 
