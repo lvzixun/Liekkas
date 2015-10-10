@@ -1,10 +1,10 @@
 #include <jni.h>
 #include <android/log.h>
 
-#include "src/opensl/lopensl.h"
-#include "src/opensl/opensl.h"
-#include "src/lk_util.h"
-#include "src/lk_decode.h"
+#include "liekkas/src/opensl/lopensl.h"
+#include "liekkas/src/opensl/opensl.h"
+#include "liekkas/src/lk_util.h"
+#include "liekkas/src/lk_decode.h"
 #include "lua.h"
 #include "lualib.h"
 #include "lauxlib.h"

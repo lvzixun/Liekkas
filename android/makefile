@@ -7,7 +7,7 @@ log:
 
 build:
 	mkdir -p assets
-	cp -r jni/src/bind/*.lua assets/
+	cp -r jni/liekkas/src/bind/*.lua assets/
 	cp -r ../test/sound ../test/android_test.lua  assets/
 	cd jni && ndk-build clean && ndk-build
 	ant debug
