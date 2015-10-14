@@ -134,8 +134,15 @@ _decode_wav (const char* filepath, struct oal_info* out) {
 
   // read wave data
   struct wav_data data_fmt;
-  check(_read_wave_data(fp, &data_fmt), "read wave data error");
-    
+  for(;;) {
+    check(_read_wave_data(fp, &data_fmt), "read wave data error");
+    if(memcmp(data_fmt.subchunk_id, "data", 4)==0){
+      break;
+    }else {
+      fseek(fp, data_fmt.subchunk_sz, SEEK_CUR); // jump not need chunk
+    }
+  }
+  
   buffer = (uint8_t*)malloc(data_fmt.subchunk_sz);
   check(buffer, "malloc buffer error");
 
