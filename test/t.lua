@@ -19,6 +19,7 @@ local _sound = {
   "test/sound/air_trap.mp3",
   "test/sound/alliance_build_drop_04.caf",
   "test/sound/alliance_jingle_v2.mp3",
+  "test/sound/door_open.wav",
 }
 
 local _music = {
@@ -31,6 +32,8 @@ local _music = {
 for i,v in ipairs(_sound) do
   sound:load(v)
 end
+
+sound:play(_sound[4])
 
 sound:play(_sound[1], true)
 _delay()
