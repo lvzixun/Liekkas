@@ -21,8 +21,6 @@ struct riff_header {
 };
 
 struct wav_format {
-  uint8_t subchunk_id[4];
-  uint32_t subchunk_sz;
   uint16_t audio_format;
   uint16_t num_channels;
   uint32_t sample_rate;
@@ -84,15 +82,12 @@ _read_riff(FILE* fp, struct riff_header* out_val) {
 
 static bool
 _read_wave_foramt(FILE* fp, struct wav_format* out_val) {
-    if(_read_buffer(fp, out_val->subchunk_id, 4)          &&
-       _read_int(fp, &out_val->subchunk_sz)               &&
-       _read_short(fp, &out_val->audio_format)            &&
+    if(_read_short(fp, &out_val->audio_format)            &&
        _read_short(fp, &out_val->num_channels)            &&
        _read_int(fp, &out_val->sample_rate)               &&
        _read_int(fp, &out_val->byte_rate)                 &&
        _read_short(fp, &out_val->block_align)             &&
-       _read_short(fp, &out_val->bits_per_sample)         &&
-       0==memcmp(out_val->subchunk_id, "fmt ", 4)         ){
+       _read_short(fp, &out_val->bits_per_sample)         ){
         return true;
     }
   return false;
@@ -124,10 +119,18 @@ _decode_wav (const char* filepath, struct oal_info* out) {
   struct riff_header riff;
   check(_read_riff(fp, &riff), "read riff header error");
 
+  struct wav_data fmt_data;
+  check(_read_wave_data(fp, &fmt_data), "read fmt header error");
+  check(memcmp(fmt_data.subchunk_id, "fmt ", 4)==0, "invalid fmt header");
+
   // read wave format
   struct wav_format wav_fmt;
   _read_wave_foramt(fp, &wav_fmt);
 
+  long padding = fmt_data.subchunk_sz - sizeof(struct wav_format);
+  if (padding > 0) {
+    fseek(fp, padding, SEEK_CUR);
+  }
 
   // read wave data
   struct wav_data data_fmt;
@@ -140,7 +143,7 @@ _decode_wav (const char* filepath, struct oal_info* out) {
     }
   }
   
-  buffer = malloc(data_fmt.subchunk_sz);
+  buffer = (uint8_t*)malloc(data_fmt.subchunk_sz);
   check(buffer, "malloc buffer error");
 
   check(_read_buffer(fp, buffer, data_fmt.subchunk_sz), "read buffer error");
