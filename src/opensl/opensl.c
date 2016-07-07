@@ -47,7 +47,7 @@ static struct {
     struct sl_bgm bgm;
 
     AAssetManager* asset_mgr;
-}ENV;
+}ENV = {0};
 
 
 
@@ -154,6 +154,7 @@ sl_destory() {
         }
 
         _bgm_free(&ENV.bgm);
+        ENV._is_init = false;
     }
 }
 
