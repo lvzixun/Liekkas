@@ -51,7 +51,7 @@ end
 
 -- for test
 local audio_files = {
-    "alliance_build_drop_04.wav",
+    "sound/alliance_build_drop_04.wav",
 }
 
 for i,v in ipairs(audio_files) do
@@ -59,12 +59,13 @@ for i,v in ipairs(audio_files) do
 end
 
 sound:play(audio_files[1], true)
--- _delay()
-sound:play(audio_files[1])
--- _delay()
-sound:play(audio_files[1])
-sound:play(audio_files[1])
-sound:play(audio_files[1])
+
+-- -- _delay()
+-- sound:play(audio_files[1])
+-- -- _delay()
+-- sound:play(audio_files[1])
+-- sound:play(audio_files[1])
+-- sound:play(audio_files[1])
 -- sound:play(audio_files[1])
 
 
