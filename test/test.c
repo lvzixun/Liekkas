@@ -18,8 +18,8 @@ int main(int argc, char const *argv[]) {
   lua_State* L =  luaL_newstate();
 
   luaL_openlibs(L);
-  _register(L, "oal", luaopen_oal);
-  _register(L, "oal.decode", luaopen_oal_decode);
+  _register(L, "liekkas", luaopen_liekkas);
+  _register(L, "liekkas.decode", luaopen_liekkas_decode);
 
   if(luaL_dofile(L, "../oal/t.lua")) {
     const char* err = lua_tostring(L, -1);

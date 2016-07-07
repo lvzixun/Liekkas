@@ -1,0 +1,6 @@
+[submodule "src/lua"]
+	path = src/lua
+	url = https://github.com/ejoy/lua.git
+[submodule "android/jni/lua/src"]
+	path = android/jni/lua/src
+	url = https://github.com/ejoy/lua.git

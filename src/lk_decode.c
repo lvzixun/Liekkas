@@ -1,10 +1,9 @@
-#include "oal_decode.h"
+#include "lk_decode.h"
 #include <stdlib.h>
 
 
 int adl_decode_caf(lua_State* L);
 int adl_decode_mp3(lua_State* L);
-int adl_decode_hardware_ios(lua_State* L);
 int adl_decode_wav(lua_State* L);
 int adl_decode_tools(lua_State* L);
 int adl_decode_ogg(lua_State* L);
@@ -47,6 +46,13 @@ _info_tostring(lua_State* L) {
   return 1;
 }
 
+static int
+_info_dump(lua_State* L) {
+  struct oal_info* p = (struct oal_info*)lua_touserdata(L, 1);
+  lua_pushlstring(L, p->data, p->size);
+  return 1;
+}
+
 
 int
 ad_new_info(lua_State* L, struct oal_info* info) {
@@ -66,19 +72,18 @@ ad_new_info(lua_State* L, struct oal_info* info) {
 
 
 int
-luaopen_oal_decode(lua_State* L) {
+luaopen_liekkas_decode(lua_State* L) {
   luaL_checkversion(L);
   luaL_Reg l[] = {
     {"decode_tools", adl_decode_tools},
     {"decode_mp3", adl_decode_mp3},
     {"decode_wav", adl_decode_wav},
     {"decode_ogg", adl_decode_ogg},
+    {"info_dump", _info_dump},
     {NULL, NULL},
   };
 
   luaL_newlib(L, l);
-  adl_decode_hardware_ios(L);
-  lua_setfield(L, -2, "decode_hardware_ios");
   return 1;
 }
 

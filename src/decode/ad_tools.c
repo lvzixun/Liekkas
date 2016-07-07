@@ -1,8 +1,7 @@
-#include "../oal_decode.h"
+#include "../lk_decode.h"
 
 #include <string.h>
 #include <stdlib.h>
-
 
 #ifdef SUPPORT_AUDIO_TOOLS
 #import <AudioToolbox/AudioToolbox.h>
@@ -86,9 +85,9 @@ _decode_tools (const char* filepath, struct oal_info* out) {
   if(status == noErr) {
     // success
     out->data = data;
-    out->size = (ALsizei)data_size;
-    out->format = (output_format.mChannelsPerFrame > 1) ? AL_FORMAT_STEREO16 : AL_FORMAT_MONO16;
-    out->freq = (ALsizei)output_format.mSampleRate;
+    out->size = data_size;
+    out->format = (output_format.mChannelsPerFrame > 1) ? FORMAT_STEREO16 : FORMAT_MONO16;
+    out->freq = output_format.mSampleRate;
   } else {
     // failure
     free(data);

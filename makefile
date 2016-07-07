@@ -1,16 +1,18 @@
-.PHONY: clean sound_test
+.PHONY: clean sound_test android
 
 UNAME = $(shell uname)
 
 
 
-OAL_SOURCE = src/oal.c \
-	src/oal_decode.c \
+OAL_SOURCE = src/openal/oal.c \
+	src/lk_decode.c \
+	src/lk_util.c \
 	src/decode/ad_tools.c \
 	src/decode/ad_mp3.c \
 	src/decode/ad_wav.c \
 	src/decode/ad_ogg.c \
-	src/decode/ad_hardware_mac_ios.m
+	src/bgm/bgm_ios.m \
+	src/lk_bgm.c
 
 ifeq ($(UNAME), Darwin)
 	CC = clang
@@ -42,7 +44,7 @@ else
 	TARGET = $(TEST_EXE) bin
 endif
 
-OAL_LIB = oal.$(LIB_SUFFIX)
+OAL_LIB = liekkas.$(LIB_SUFFIX)
 
 
 all: $(TARGET)
@@ -66,6 +68,8 @@ bin:
 	-cp -r ../_3lib/mpg123-1.22.0-x86/*.dll ../bin
 	-cp $(TEST_EXE) ../bin
 
+android:
+	cd android && android update project --target 1 --path ./ && make build
 
 clean:
 	-rm -rf $(OAL_LIB)

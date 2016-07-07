@@ -1,4 +1,5 @@
-#include "../oal_decode.h"
+#include "../lk_decode.h"
+#include "../lk_util.h"
 
 #include <assert.h>
 #include <string.h>
@@ -20,20 +21,15 @@ _get_info(mpg123_handle* handle, struct oal_info* out_info) {
     ad_error("mpg123_getformat error status[%d]", err);
     return NULL;
   }
-  ALsizei size = mpg123_length(handle);
-  if (size == MPG123_ERR) {
-    ad_error("mpg123_length error");
-    return NULL;
-  }
-  ALsizei freq = rate;
-  ALsizei format;
+
+  int freq = rate;
+  int format;
   if (encoding == MPG123_ENC_UNSIGNED_8) {
-    format = (channels==1)?(AL_FORMAT_MONO8):(AL_FORMAT_STEREO8);
+    format = (channels==1)?(FORMAT_MONO8):(FORMAT_STEREO8);
   } else {
-    format = (channels==1)?(AL_FORMAT_MONO16):(AL_FORMAT_STEREO16);
+    format = (channels==1)?(FORMAT_MONO16):(FORMAT_STEREO16);
   }
 
-  out_info->size = size;
   out_info->format = format;
   out_info->freq =freq;
   return out_info;
@@ -57,43 +53,65 @@ _get_handle() {
 
 static void*
 _read(mpg123_handle* handle, size_t size, size_t *out_done) {
-  unsigned char* head = malloc(size);
-  unsigned char* buffer = head;
-  size_t cap = size;
-  *out_done = 0;
+  unsigned char* out_buffer = malloc(size);
+  unsigned char* head = out_buffer;
+  size_t head_sz = size;
+  size_t read_sz = 0;
 
-  do{
-    size_t _read = 0;
-    int err = mpg123_read(handle, buffer, cap, &_read);
-    *out_done += _read;
-    if(err != MPG123_OK) {
-      if(err != MPG123_DONE) {
-        free(buffer);
-        return NULL;
-      }
-      break;
-    }else {
-      size_t new_size = size*2;
-      head = realloc(head, new_size);
-      buffer = head + size;
-      cap = size;
-      size = new_size;
+  *out_done = 0;
+  do {
+    int err = mpg123_decode(handle, NULL, 0, head, head_sz, &read_sz);
+    switch(err) {
+      case MPG123_ERR:
+        goto EXIT;
+      case MPG123_NEED_MORE:
+        *out_done += read_sz;
+        return out_buffer;
+      default:
+        *out_done += read_sz;
+        size = size*2;
+        out_buffer = (unsigned char*)realloc(out_buffer, size);
+        head = out_buffer + *out_done;
+        head_sz = size - *out_done;
+        if(!out_buffer)
+          goto EXIT;
+        break;
     }
   }while(true);
-  return head;
+
+EXIT:
+  if(out_buffer) free(out_buffer);
+  return NULL;
 }
 
 static bool
 _decode_mp3(const char* filepath, struct oal_info* out) {
   bool ret = false;
+  unsigned char* in_buffer = NULL;
+
   mpg123_handle* handle = _get_handle();
   if(!handle){
     ad_error("cannot set specified mpg123 format, file: %s", filepath);
+    return false;
+  }
+
+  struct util_fp* util_handle = util_file_open(filepath);
+
+  if(!util_handle || MPG123_OK != mpg123_open_feed(handle)) {
+    ad_error("open file: %s error.", filepath);
     goto EXIT;
   }
 
-  if(MPG123_OK != mpg123_open(handle, filepath)) {
-    ad_error("open file: %s error.", filepath);
+  size_t sz = util_file_size(util_handle);
+  in_buffer = (unsigned char*)malloc(sz);
+  if(!in_buffer) {
+    ad_error("prepare in buffer error.");
+    goto EXIT;
+  }
+
+  util_file_readall(util_handle, in_buffer, sz);
+  if(MPG123_OK != mpg123_feed(handle, (const unsigned char*)in_buffer, sz)) {
+    ad_error("set feed: %s error.", filepath);
     goto EXIT;
   }
 
@@ -102,8 +120,8 @@ _decode_mp3(const char* filepath, struct oal_info* out) {
     goto EXIT;
   }
 
-  size_t size = out->size;
-  if(out->format == AL_FORMAT_MONO16 || out->format == AL_FORMAT_STEREO16) {
+  size_t size = sz;
+  if(out->format == FORMAT_MONO16 || out->format == FORMAT_STEREO16) {
     size *= 2;
   }
 
@@ -118,9 +136,12 @@ _decode_mp3(const char* filepath, struct oal_info* out) {
     out->size = done;    
   }
 
-  mpg123_close(handle);
   ret = true;
+
 EXIT:
+  mpg123_close(handle);
+  if(in_buffer) free(in_buffer);
+  if(util_handle) util_file_close(util_handle);
   return ret;
 }
 
