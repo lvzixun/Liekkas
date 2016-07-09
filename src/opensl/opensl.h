@@ -2,7 +2,6 @@
 #define _OPENSL_H_
 
 #include <stdbool.h>
-
 #include <jni.h>
 #include <android/log.h>
 #include <android/asset_manager.h>
@@ -13,6 +12,8 @@
 
 AAssetManager* sl_get_asset_mgr();
 bool sl_isinit();
+void sl_pause();
+void sl_resume();
 
 
 enum sl_source_state {

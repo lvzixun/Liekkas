@@ -22,6 +22,13 @@ public class TestAudio extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
+        Liekkas.enginePause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Liekkas.engineResume();
     }
 
     @Override

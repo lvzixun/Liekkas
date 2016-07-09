@@ -43,7 +43,7 @@ end
 
 
 local function _delay()
-  for i=1,1000000 do
+  for i=1,10000000 do
   end
   print("delay~~")
 end
@@ -51,14 +51,20 @@ end
 
 -- for test
 local audio_files = {
-    "sound/alliance_build_drop_04.wav",
+    "sound/baosanniang_skill.mp3",
+    "sound/voice_fazhen_command_move.mp3",
 }
 
+local b = os.time()
 for i,v in ipairs(audio_files) do
     sound:load(v)
 end
+local e = os.time()
+print("load cost time:", e - b, "time:", b, e)
 
-sound:play(audio_files[1], true)
+sound:play(audio_files[2], true)
+
+
 
 -- -- _delay()
 -- sound:play(audio_files[1])

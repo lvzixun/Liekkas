@@ -10,6 +10,7 @@ build:
 	cp -r jni/liekkas/src/bind/*.lua assets/
 	cp -r ../test/sound ../test/android_test.lua  assets/
 	cd jni && ndk-build clean && ndk-build
+	# cd jni && ndk-build
 	ant debug
 
 clean:

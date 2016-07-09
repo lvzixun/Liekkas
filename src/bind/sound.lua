@@ -1,7 +1,7 @@
 local audio = require "audio"
 
 local M = {}
-local sound_group = audio:create_group(8)
+local sound_group = audio:create_group(16)
 
 
 function M:load(file_path)

@@ -33,6 +33,13 @@ struct sl_bgm {
     char* file_name;
 };
 
+struct source_buffer {
+    struct sl_source* raw[2];
+    struct sl_source** p;
+    size_t cap;
+    size_t len;
+};
+
 static struct {
     SLObjectItf engineObject;
     SLEngineItf engineEngine;
@@ -46,9 +53,10 @@ static struct {
 
     struct sl_bgm bgm;
 
+    struct source_buffer source_record;
+
     AAssetManager* asset_mgr;
 }ENV = {0};
-
 
 
 #define _check_result(result) do { \
@@ -71,6 +79,60 @@ static void  sl_destory();
 static bool  sl_init();
 static void _bgm_free(struct sl_bgm* bgm);
 
+static void
+source_buffer_init(struct source_buffer* sp) {
+    assert(sp->p==NULL);
+    sp->p = sp->raw;
+    sp->len = 0;
+    sp->cap = sizeof(sp->raw) / sizeof(sp->raw[0]);
+}
+
+static void
+source_buffer_free(struct source_buffer* sp) {
+    if(sp->p && sp->p != sp->raw) {
+        free(sp->p);
+    }
+    memset(sp, 0, sizeof(*sp));
+}
+
+
+static void
+source_buffer_add(struct source_buffer* sp, struct sl_source* v) {
+    if(sp->cap >= sp->len) {
+        size_t new_cap = sp->cap*2;
+        if(sp->p == sp->raw) {
+            sp->p = malloc(new_cap);
+            memcpy(sp->p, sp->raw, sizeof(sp->raw));
+        }else {
+            sp->p = realloc(sp->p, new_cap);
+        }
+        sp->cap = new_cap;
+    }
+
+    sp->p[sp->len++] = v;
+}
+
+static void
+source_buffer_remove(struct source_buffer* sp, struct sl_source* v) {
+    size_t i=0;
+    size_t idx = sp->len;
+
+    if(sp->cap == 0)
+        return;
+
+    for(i; i<sp->len; i++) {
+        if(sp->p[i] == v) {
+            idx = i;
+            sp->len--;
+            break;
+        }
+    }
+
+    for(i=idx; i<sp->len; i++) {
+        sp->p[i] = sp->p[i+1];
+    }
+}
+
 
 // ------------------  opensl env -------------------------
 static bool 
@@ -81,6 +143,8 @@ sl_init () {
     SLresult result;
 
     memset(&ENV, 0, sizeof(ENV));
+
+    source_buffer_init(&ENV.source_record);
 
     ENV.last_error_code = SL_RESULT_SUCCESS;
     SLEnvironmentalReverbSettings v = SL_I3DL2_ENVIRONMENT_PRESET_STONECORRIDOR;
@@ -128,6 +192,37 @@ ERROR:
     return false;
 }
 
+void
+sl_pause() {
+    size_t i=0;
+    struct source_buffer* sp;
+    if(!ENV._is_init)
+        return;
+
+    sp = &ENV.source_record;
+    for(i; i<sp->len; i++) {
+        struct sl_source* v = sp->p[i];
+        if(sl_source_get_state(v) == SL_SOURCE_PLAY) {
+            sl_source_set_state(v, SL_SOURCE_PAUSE);
+        }
+    }
+}
+
+void
+sl_resume() {
+    size_t i=0;
+    struct source_buffer* sp;
+    if(!ENV._is_init)
+        return;
+
+    sp = &ENV.source_record;
+    for(i; i<sp->len; i++) {
+        struct sl_source* v = sp->p[i];
+        if(sl_source_get_state(v) == SL_SOURCE_PAUSE) {
+            sl_source_set_state(v, SL_SOURCE_PLAY);
+        }
+    }   
+}
 
 AAssetManager*
 sl_get_asset_mgr() {
@@ -153,6 +248,7 @@ sl_destory() {
             ENV.engineObject = NULL;
         }
 
+        source_buffer_free(&ENV.source_record);
         _bgm_free(&ENV.bgm);
         ENV._is_init = false;
     }
@@ -213,7 +309,7 @@ sl_source_gen() {
 
     // configure audio source
     SLDataLocator_AndroidSimpleBufferQueue loc_bufq = {SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 2};
-    SLDataFormat_PCM format_pcm = {SL_DATAFORMAT_PCM, 1, SL_SAMPLINGRATE_22_05,
+    SLDataFormat_PCM format_pcm = {SL_DATAFORMAT_PCM, 1, SL_SAMPLINGRATE_44_1,
         SL_PCMSAMPLEFORMAT_FIXED_16, SL_PCMSAMPLEFORMAT_FIXED_16,
         SL_SPEAKER_FRONT_CENTER, SL_BYTEORDER_LITTLEENDIAN};
     SLDataSource audioSrc = {&loc_bufq, &format_pcm};
@@ -227,8 +323,10 @@ sl_source_gen() {
             /*SL_IID_MUTESOLO,*/ SL_IID_VOLUME};
     const SLboolean req[3] = {SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE,
             /*SL_BOOLEAN_TRUE,*/ SL_BOOLEAN_TRUE};
+    sl_log("sl_source_gen!!!! begin!!!\n");
     result = (*ENV.engineEngine)->CreateAudioPlayer(ENV.engineEngine, &ret->bqPlayerObject, &audioSrc, &audioSnk,
             3, ids, req);
+    sl_log("sl_source_gen!!!! end : %d!!!\n", result);
     _check_result(result);
 
     // realize the player
@@ -260,6 +358,7 @@ sl_source_gen() {
     result = (*ret->bqPlayerPlay)->SetPlayState(ret->bqPlayerPlay, SL_PLAYSTATE_PLAYING);
     _check_result(result);
 
+    source_buffer_add(&ENV.source_record, ret);
     return ret;
 
 ERROR:
@@ -272,6 +371,7 @@ ERROR:
 void
 sl_source_free(struct sl_source* source) {
     if(source) {
+        source_buffer_remove(&ENV.source_record, source);
         if(source->bqPlayerObject) {
             (*source->bqPlayerObject)->Destroy(source->bqPlayerObject);
         }
@@ -529,5 +629,17 @@ Java_com_liekkas_Liekkas_engineInit(JNIEnv* env, jclass clazz, jobject assetMana
 JNIEXPORT void JNICALL
 Java_com_liekkas_Liekkas_engineDestory(JNIEnv* env, jclass clazz) {
     sl_destory();
+}
+
+
+JNIEXPORT void JNICALL
+Java_com_liekkas_Liekkas_enginePause(JNIEnv* env, jclass clazz) {
+    sl_pause();
+}
+
+
+JNIEXPORT void JNICALL
+Java_com_liekkas_Liekkas_engineResume(JNIEnv* env, jclass clazz) {
+    sl_resume();
 }
 

@@ -16,7 +16,7 @@ OAL_SOURCE = src/openal/oal.c \
 
 ifeq ($(UNAME), Darwin)
 	CC = clang
-	FLAG = -fPIC -Wall -g -dynamiclib -Wl,-undefined,dynamic_lookup
+	FLAG = -fPIC -Wall -g -dynamiclib -Wl,-undefined,dynamic_lookup -I/usr/local/include/ -L/usr/local/Cellar/mpg123/1.21.0/lib/
 	MACRO = 
 	FRAMEWORK = -framework OpenAL -framework AVFoundation
 
@@ -24,13 +24,13 @@ ifeq ($(UNAME), Darwin)
 	MACRO += -DSUPPORT_AUDIO_MP3
 	FRAMEWORK += -lmpg123
 
-	#audio_tools
-	MACRO += -DSUPPORT_AUDIO_TOOLS
-	FRAMEWORK += -framework AudioToolbox
+	# #audio_tools
+	# MACRO += -DSUPPORT_AUDIO_TOOLS
+	# FRAMEWORK += -framework AudioToolbox
 
-	#ogg
-	MACRO += -DSUPPORT_AUDIO_VORBIS
-	FRAMEWORK += -lvorbis -lvorbisfile
+	# #ogg
+	# MACRO += -DSUPPORT_AUDIO_VORBIS
+	# FRAMEWORK += -lvorbis -lvorbisfile
 
 	LIB_SUFFIX = so
 	TARGET = $(OAL_LIB)
@@ -69,7 +69,7 @@ bin:
 	-cp $(TEST_EXE) ../bin
 
 android:
-	cd android && android update project --target 1 --path ./ && make build
+	cd android && android update project --target 1 --path ./ && make build && adb install bin/TestAudio-debug.apk && adb logcat | grep "ejoy"
 
 clean:
 	-rm -rf $(OAL_LIB)
