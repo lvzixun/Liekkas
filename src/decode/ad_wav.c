@@ -131,7 +131,7 @@ _decode_wav (const char* filepath, struct oal_info* out) {
 
   long padding = fmt_data.subchunk_sz - sizeof(struct wav_format);
   if (padding > 0) {
-    fseek(fp, padding, SEEK_CUR);
+    util_file_seek(fp, padding, SEEK_CUR);
   }
 
   // read wave data
