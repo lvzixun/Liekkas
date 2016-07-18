@@ -98,13 +98,13 @@ source_buffer_free(struct source_buffer* sp) {
 
 static void
 source_buffer_add(struct source_buffer* sp, struct sl_source* v) {
-    if(sp->cap >= sp->len) {
+    if(sp->cap <= sp->len) {
         size_t new_cap = sp->cap*2;
         if(sp->p == sp->raw) {
-            sp->p = malloc(new_cap);
+            sp->p = malloc(new_cap*sizeof(struct sl_source*));
             memcpy(sp->p, sp->raw, sizeof(sp->raw));
         }else {
-            sp->p = realloc(sp->p, new_cap);
+            sp->p = realloc(sp->p, new_cap*sizeof(struct sl_source*));
         }
         sp->cap = new_cap;
     }
