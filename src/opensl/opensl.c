@@ -237,6 +237,8 @@ sl_isinit() {
 static void 
 sl_destory() {
     if(ENV._is_init){
+        _bgm_free(&ENV.bgm);
+        
         if(ENV.outputMixObject) {
             (*ENV.outputMixObject)->Destroy(ENV.outputMixObject);
             ENV.outputMixObject = NULL;
@@ -249,7 +251,6 @@ sl_destory() {
         }
 
         source_buffer_free(&ENV.source_record);
-        _bgm_free(&ENV.bgm);
         ENV._is_init = false;
     }
 }
