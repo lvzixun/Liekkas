@@ -20,8 +20,22 @@ struct _oal_state {
 } OAL_STATE = {0};
 
 
+#define CHECK_ERROR(tag) do{ \
+                            int error = alGetError(); \
+                            if(error != AL_NO_ERROR) { \
+                              luaL_error(L, "%s error:%d\n", tag, error); \
+                            } \
+                          }while(0)
 
+
+#ifdef _MSC_VER
+typedef ALvoid (*alcMacOSXMixerOutputRateProcPtr) (const ALdouble value);
+#else
 typedef ALvoid  AL_APIENTRY (*alcMacOSXMixerOutputRateProcPtr) (const ALdouble value);
+#endif // _MSC_VER
+
+
+// --------------------  openal state  --------------------
 static ALvoid  
 alcMacOSXMixerOutputRateProc(const ALdouble value) {
   static  alcMacOSXMixerOutputRateProcPtr proc = NULL;
@@ -68,275 +82,6 @@ _init_openal(lua_State* L) {
 }
 
 
-static int
-_id2string(lua_State* L) {
-  ALuint id = *((ALuint*)lua_touserdata(L, 1));
-  char buffer[24] = {0};
-  sprintf(buffer, "%d", id);
-  lua_pushstring(L, buffer);
-  return 1;
-}
-
-
-static int
-l_free_source(lua_State* L) {
-  ALuint source_id = *((ALuint*)lua_touserdata(L, 1));
-  alSourceStop(source_id);
-  alSourcei(source_id, AL_BUFFER, 0);
-  alDeleteSources(1, &source_id);
-  int err;
-  if((err=alGetError()) != AL_NO_ERROR) {
-    luaL_error(L, "free error source id[%d]", source_id);
-  }
-  return 0;
-}
-
-static int
-l_source_volume(lua_State* L) {
-  ALuint source_id = *((ALuint*)lua_touserdata(L, 1));
-  lua_Number v = lua_tonumber(L, 2);
-
-  alSourcef(source_id, AL_GAIN, v);
-  return 0;
-}
-
-static int
-l_source_position(lua_State* L) {
-  ALuint source_id = *((ALuint*)lua_touserdata(L, 1));
-  lua_Number x = lua_tonumber(L, 2);
-  lua_Number y = lua_tonumber(L, 3);
-  lua_Number z = lua_tonumber(L, 4);
-
-  alSource3f(source_id, AL_POSITION, x, y, z);
-  return 0;
-}
-
-
-static int
-l_source_state(lua_State* L) {
-  ALuint source_id = *((ALuint*)lua_touserdata(L, 1));
-  ALint state;
-  alGetSourcei(source_id, AL_SOURCE_STATE, &state);
-  lua_pushinteger(L, state);
-  return 1;
-}
-
-static int
-l_play_source(lua_State* L) {
-  ALuint source_id = *((ALuint*)lua_touserdata(L, 1));
-  alSourcePlay(source_id);
-  return 0;
-}
-
-
-static int
-l_pause_source(lua_State* L) {
-  ALuint source_id = *((ALuint*)lua_touserdata(L, 1));
-  alSourcePause(source_id);
-  return 0;
-}
-
-static int
-l_rewind_source(lua_State* L) {
-  ALuint source_id = *((ALuint*)lua_touserdata(L, 1));
-  alSourceRewind(source_id);
-  return 0;
-}
-
-static int
-l_stop_source(lua_State* L) {
-  ALuint source_id = *((ALuint*)lua_touserdata(L, 1));
-  alSourceStop(source_id);
-  return 0;
-}
-
-
-static int
-l_clear_source(lua_State* L) {
-  ALuint source_id = *((ALuint*)lua_touserdata(L, 1));
-  alSourceStop(source_id);
-  alSourcei(source_id, AL_BUFFER, 0);
-  int err;
-  if((err=alGetError()) != AL_NO_ERROR) {
-    luaL_error(L, "clear error source id[%d]", source_id);
-  }
-  return 0;
-}
-
-static int
-_new_source(lua_State* L, ALuint source_id) {
-  ALuint* p = (ALuint*)lua_newuserdata(L, sizeof(source_id));
-  *p = source_id;
-  if(luaL_newmetatable(L, "mt_source")) {
-    lua_pushcfunction(L, l_free_source);
-    lua_setfield(L, -2, "__gc");
-    lua_pushcfunction(L, _id2string);
-    lua_setfield(L, -2, "__tostring");
-
-    luaL_Reg l[] = {
-      {"clear", l_clear_source},
-      {"play", l_play_source},
-      {"stop", l_stop_source},
-      {"rewind", l_rewind_source},
-      {"pause", l_pause_source},
-      {"state", l_source_state},
-      {"volume", l_source_volume},
-      {"position", l_source_position},
-      {NULL, NULL},
-    };
-    luaL_newlib(L, l);
-    lua_setfield(L, -2, "__index");
-  }
-
-  lua_setmetatable(L, -2);
-  return 1;
-}
-
-
-static int
-l_create_source(lua_State* L) {
-  int err=AL_NO_ERROR;
-  alGetError(); // clear error
-  ALuint source_id;
-  alGenSources(1, &source_id);
-  err = alGetError();
-  if(err == AL_NO_ERROR) {
-    //Now try attaching source to null buffer
-    alSourcei(source_id, AL_BUFFER, 0);
-    err = alGetError();
-    if(err != AL_NO_ERROR) {
-      luaL_error(L, "create source error[%d]", err);
-    }
-  }else {
-    luaL_error(L, "create source error[%d]", err);
-  }
-
-  return _new_source(L, source_id);
-}
-
-static int
-l_free_bufferid(lua_State* L) {
-  ALuint buffer_id = *((ALuint*)lua_touserdata(L, 1));
-  alDeleteBuffers(1, &buffer_id);
-  return 0;
-}
-
-
-static int
-_new_bufferid(lua_State* L, ALuint buffer_id) {
-  ALuint* p = (ALuint*)lua_newuserdata(L, sizeof(buffer_id));
-  *p = buffer_id;
-  if(luaL_newmetatable(L, "mt_buffer")) {
-    lua_pushcfunction(L, l_free_bufferid);
-    lua_setfield(L, -2, "__gc");
-    lua_pushcfunction(L, _id2string);
-    lua_setfield(L, -2, "__tostring");
-  }
-
-  lua_setmetatable(L, -2);
-  return 1;
-}
-
-
-static void
-_source_state(lua_State* L) {
-  struct {
-    ALint t;
-    const char*  s;
-  }v[] = {
-    { AL_PLAYING, "playing"},
-    { AL_INITIAL, "initial"},
-    { AL_STOPPED, "stopped"},
-    { AL_PAUSED, "paused"},
-  };
-
-  lua_newtable(L);
-  int i;
-  for(i=0; i<sizeof(v) / sizeof(v[0]); i++) {
-    lua_pushstring(L, v[i].s);
-    lua_pushinteger(L, v[i].t);
-    lua_settable(L, -3);
-  }
-}
-
-static int
-l_create_buffer(lua_State* L) {
-  int err=AL_NO_ERROR;
-  alGetError(); // clear error
-  ALuint buffer_id;
-  alGenBuffers(1, &buffer_id);
-  err = alGetError();
-  if(err != AL_NO_ERROR) {
-    luaL_error(L, "create bufferid error[%d]", err);
-  }
-
-  return _new_bufferid(L, buffer_id);
-}
-
-static int
-l_bind_buffer(lua_State* L) {
-  ALuint buffer_id = *((ALuint*)lua_touserdata(L, 1));
-  struct oal_info* info = (struct oal_info*)lua_touserdata(L, 2);
-
-  int err=AL_NO_ERROR;
-  alGetError(); // clear error
-  alBufferData(buffer_id, info->format, info->data, info->size, info->freq);
-  err = alGetError();
-  if(err != AL_NO_ERROR) {
-    luaL_error(L, "bind buffer error[%d]", err);
-  }
-
-  return 0;
-}
-
-static int
-l_listen_position(lua_State* L) {
-  lua_Number x = lua_tonumber(L, 1);
-  lua_Number y = lua_tonumber(L, 2);
-  lua_Number z = lua_tonumber(L, 3);
-
-  alListener3f(AL_POSITION, x, y, z);
-  return 0;
-}
-
-
-static int
-l_set(lua_State* L) {
-  ALuint source_id = *((ALuint*)lua_touserdata(L, 1));
-  ALuint buffer_id = *((ALuint*)lua_touserdata(L, 2));
-  lua_Number pitch = lua_tonumber(L, 3);
-  lua_Number max_distance = lua_tonumber(L, 4);
-  lua_Number gain = lua_tonumber(L, 5);
-  int loop = lua_toboolean(L, 6);
-
-  ALint state;
-
-  int err=AL_NO_ERROR;
-  alGetError(); // clear error
-
-  alGetSourcei(source_id, AL_SOURCE_STATE, &state);
-  if (state == AL_PLAYING) {
-    alSourceStop(source_id);
-  }
-
-  alSourcef(source_id, AL_PITCH, pitch);
-  alSourcei(source_id, AL_LOOPING, loop);
-  alSourcef(source_id, AL_GAIN, gain);
-  alSourcei(source_id, AL_MAX_DISTANCE, max_distance);
-  alSourcei(source_id, AL_BUFFER, buffer_id);
-
-  err = alGetError();
-  if(err == AL_NO_ERROR) {
-    lua_pushinteger(L, source_id);
-  }else if(alcGetCurrentContext() == NULL) {
-    luaL_error(L, "posting bad OpenAL context message");
-  }
-
-  lua_pushvalue(L, 1);
-  return 1;
-}
-
-
 // maybe never call
 static void
 _free_oal() {
@@ -363,6 +108,252 @@ oal_resumed() {
     alcMakeContextCurrent(OAL_STATE.context);
   }
 }
+
+static int
+_id2string(lua_State* L) {
+  ALuint id = *((ALuint*)lua_touserdata(L, 1));
+  char buffer[24] = {0};
+  sprintf(buffer, "%d", id);
+  lua_pushstring(L, buffer);
+  return 1;
+}
+
+static int
+l_listen_position(lua_State* L) {
+  lua_Number x = lua_tonumber(L, 1);
+  lua_Number y = lua_tonumber(L, 2);
+  lua_Number z = lua_tonumber(L, 3);
+
+  alListener3f(AL_POSITION, x, y, z);
+  CHECK_ERROR("listen_position");
+  return 0;
+}
+
+static int
+l_set(lua_State* L) {
+  ALuint source_id = *((ALuint*)lua_touserdata(L, 1));
+  ALuint buffer_id = *((ALuint*)lua_touserdata(L, 2));
+  lua_Number pitch = lua_tonumber(L, 3);
+  lua_Number max_distance = lua_tonumber(L, 4);
+  lua_Number gain = lua_tonumber(L, 5);
+  int loop = lua_toboolean(L, 6);
+
+  ALint state;
+  alGetSourcei(source_id, AL_SOURCE_STATE, &state);
+  if (state == AL_PLAYING) {
+    alSourceStop(source_id);
+  }
+
+  alSourcef(source_id, AL_PITCH, pitch);
+  alSourcei(source_id, AL_LOOPING, loop);
+  alSourcef(source_id, AL_GAIN, gain);
+  alSourcei(source_id, AL_MAX_DISTANCE, max_distance);
+  alSourcei(source_id, AL_BUFFER, buffer_id);
+
+  CHECK_ERROR("oal_set");
+  return 0;
+}
+
+
+// --------------------  audio source  --------------------
+static int
+l_volume_source(lua_State* L) {
+  ALuint source_id = *((ALuint*)lua_touserdata(L, 1));
+  lua_Number v = lua_tonumber(L, 2);
+
+  alSourcef(source_id, AL_GAIN, v);
+  CHECK_ERROR("volume_source");
+  return 0;
+}
+
+static int
+l_position_source(lua_State* L) {
+  ALuint source_id = *((ALuint*)lua_touserdata(L, 1));
+  lua_Number x = lua_tonumber(L, 2);
+  lua_Number y = lua_tonumber(L, 3);
+  lua_Number z = lua_tonumber(L, 4);
+
+  alSource3f(source_id, AL_POSITION, x, y, z);
+  CHECK_ERROR("position_source");
+  return 0;
+}
+
+
+static int
+l_state_source(lua_State* L) {
+  ALuint source_id = *((ALuint*)lua_touserdata(L, 1));
+  ALint state;
+  alGetSourcei(source_id, AL_SOURCE_STATE, &state);
+  CHECK_ERROR("state_source");
+  lua_pushinteger(L, state);
+  return 1;
+}
+
+static int
+l_play_source(lua_State* L) {
+  ALuint source_id = *((ALuint*)lua_touserdata(L, 1));
+  alSourcePlay(source_id);
+  CHECK_ERROR("play_source");
+  return 0;
+}
+
+
+static int
+l_pause_source(lua_State* L) {
+  ALuint source_id = *((ALuint*)lua_touserdata(L, 1));
+  alSourcePause(source_id);
+  CHECK_ERROR("pause_source");
+  return 0;
+}
+
+static int
+l_rewind_source(lua_State* L) {
+  ALuint source_id = *((ALuint*)lua_touserdata(L, 1));
+  alSourceRewind(source_id);
+  CHECK_ERROR("rewind_source");
+  return 0;
+}
+
+static int
+l_stop_source(lua_State* L) {
+  ALuint source_id = *((ALuint*)lua_touserdata(L, 1));
+  alSourceStop(source_id);
+  CHECK_ERROR("stop_source");
+  return 0;
+}
+
+
+static int
+l_clear_source(lua_State* L) {
+  ALuint source_id = *((ALuint*)lua_touserdata(L, 1));
+  alSourceStop(source_id);
+  alSourcei(source_id, AL_BUFFER, 0);
+  CHECK_ERROR("clear_source");
+  return 0;
+}
+
+static int
+l_free_source(lua_State* L) {
+  ALuint source_id = *((ALuint*)lua_touserdata(L, 1));
+  alSourceStop(source_id);
+  alSourcei(source_id, AL_BUFFER, 0);
+  alDeleteSources(1, &source_id);
+  CHECK_ERROR("free_source");
+  return 0;
+}
+
+
+static int
+_new_source(lua_State* L, ALuint source_id) {
+  ALuint* p = (ALuint*)lua_newuserdata(L, sizeof(source_id));
+  *p = source_id;
+  if(luaL_newmetatable(L, "mt_source")) {
+    lua_pushcfunction(L, l_free_source);
+    lua_setfield(L, -2, "__gc");
+    lua_pushcfunction(L, _id2string);
+    lua_setfield(L, -2, "__tostring");
+
+    luaL_Reg l[] = {
+      {"clear", l_clear_source},
+      {"play", l_play_source},
+      {"stop", l_stop_source},
+      {"rewind", l_rewind_source},
+      {"pause", l_pause_source},
+      {"state", l_state_source},
+      {"volume", l_volume_source},
+      {"position", l_position_source},
+      {NULL, NULL},
+    };
+    luaL_newlib(L, l);
+    lua_setfield(L, -2, "__index");
+  }
+
+  lua_setmetatable(L, -2);
+  return 1;
+}
+
+
+static int
+l_create_source(lua_State* L) {
+  ALuint source_id;
+  alGenSources(1, &source_id);
+  CHECK_ERROR("create_source");
+
+  alSourcei(source_id, AL_BUFFER, 0);
+  CHECK_ERROR("set_source_null_buffer");  
+  
+  return _new_source(L, source_id);
+}
+
+static void
+_source_state(lua_State* L) {
+  struct {
+    ALint t;
+    const char*  s;
+  }v[] = {
+    { AL_PLAYING, "playing"},
+    { AL_INITIAL, "initial"},
+    { AL_STOPPED, "stopped"},
+    { AL_PAUSED, "paused"},
+  };
+
+  lua_newtable(L);
+  int i;
+  for(i=0; i<sizeof(v) / sizeof(v[0]); i++) {
+    lua_pushstring(L, v[i].s);
+    lua_pushinteger(L, v[i].t);
+    lua_settable(L, -3);
+  }
+}
+
+// --------------------  aduio buffer  --------------------
+
+static int
+l_free_buffer(lua_State* L) {
+  ALuint buffer_id = *((ALuint*)lua_touserdata(L, 1));
+  alDeleteBuffers(1, &buffer_id);
+  CHECK_ERROR("free_buffer");
+  return 0;
+}
+
+
+static int
+_new_buffer(lua_State* L, ALuint buffer_id) {
+  ALuint* p = (ALuint*)lua_newuserdata(L, sizeof(buffer_id));
+  *p = buffer_id;
+  if(luaL_newmetatable(L, "mt_buffer")) {
+    lua_pushcfunction(L, l_free_buffer);
+    lua_setfield(L, -2, "__gc");
+    lua_pushcfunction(L, _id2string);
+    lua_setfield(L, -2, "__tostring");
+  }
+
+  lua_setmetatable(L, -2);
+  return 1;
+}
+
+static int
+l_create_buffer(lua_State* L) {
+  ALuint buffer_id;
+  alGenBuffers(1, &buffer_id);
+  CHECK_ERROR("create_buffer");
+  
+  return _new_buffer(L, buffer_id);
+}
+
+static int
+l_bind_buffer(lua_State* L) {
+  ALuint buffer_id = *((ALuint*)lua_touserdata(L, 1));
+  struct oal_info* info = (struct oal_info*)lua_touserdata(L, 2);
+
+  alBufferData(buffer_id, info->format, info->data, info->size, info->freq);
+  CHECK_ERROR("bind_buffer");
+
+  return 0;
+}
+
+
+// --------------------  lua wraper  --------------------
 
 int
 luaopen_liekkas(lua_State* L) {
