@@ -214,7 +214,6 @@ sl_pause() {
     SLuint32 state;
     SLresult result = (*fdPlayerPlay)->GetPlayState(fdPlayerPlay, &state);
     if(state == SL_PLAYSTATE_PLAYING){
-        // sl_bgm_pause();
         (*fdPlayerPlay)->SetPlayState(fdPlayerPlay, SL_PLAYSTATE_PAUSED);
     }
 }
