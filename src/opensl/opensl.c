@@ -206,6 +206,16 @@ sl_pause() {
             sl_source_set_state(v, SL_SOURCE_PAUSE);
         }
     }
+
+    SLPlayItf fdPlayerPlay = ENV.bgm.fdPlayerPlay;
+    if(!fdPlayerPlay)
+        return;
+
+    SLuint32 state;
+    SLresult result = (*fdPlayerPlay)->GetPlayState(fdPlayerPlay, &state);
+    if(state == SL_PLAYSTATE_PLAYING){
+        (*fdPlayerPlay)->SetPlayState(fdPlayerPlay, SL_PLAYSTATE_PAUSED);
+    }
 }
 
 void
@@ -221,7 +231,17 @@ sl_resume() {
         if(sl_source_get_state(v) == SL_SOURCE_PAUSE) {
             sl_source_set_state(v, SL_SOURCE_PLAY);
         }
-    }   
+    }
+
+    SLPlayItf fdPlayerPlay = ENV.bgm.fdPlayerPlay;
+    if(!fdPlayerPlay)
+        return;
+    
+    SLuint32 state;
+    SLresult result = (*fdPlayerPlay)->GetPlayState(fdPlayerPlay, &state);
+    if(state == SL_PLAYSTATE_PAUSED){
+        (*fdPlayerPlay)->SetPlayState(fdPlayerPlay, SL_PLAYSTATE_PLAYING);
+    }
 }
 
 AAssetManager*
