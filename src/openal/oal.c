@@ -138,10 +138,6 @@ l_set(lua_State* L) {
   lua_Number gain = lua_tonumber(L, 5);
   int loop = lua_toboolean(L, 6);
 
-  ALint state;
-  alGetSourcei(source_id, AL_SOURCE_STATE, &state);
-  CHECK_ERROR("oal_set getsource");
-
   alSourceStop(source_id);
   CHECK_ERROR("oal_set sourcestop");
 
