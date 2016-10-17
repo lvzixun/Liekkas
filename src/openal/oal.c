@@ -140,16 +140,24 @@ l_set(lua_State* L) {
 
   ALint state;
   alGetSourcei(source_id, AL_SOURCE_STATE, &state);
-  if (state == AL_PLAYING) {
-    alSourceStop(source_id);
-  }
+  CHECK_ERROR("oal_set getsource");
+
+  alSourceStop(source_id);
+  CHECK_ERROR("oal_set sourcestop");
 
   alSourcef(source_id, AL_PITCH, pitch);
-  alSourcei(source_id, AL_LOOPING, loop);
-  alSourcef(source_id, AL_GAIN, gain);
-  alSourcei(source_id, AL_MAX_DISTANCE, max_distance);
-  alSourcei(source_id, AL_BUFFER, buffer_id);
+  CHECK_ERROR("oal_set pitch");
 
+  alSourcei(source_id, AL_LOOPING, loop);
+  CHECK_ERROR("oal_set loop");
+
+  alSourcef(source_id, AL_GAIN, gain);
+  CHECK_ERROR("oal_set gain");
+
+  alSourcei(source_id, AL_MAX_DISTANCE, max_distance);
+  CHECK_ERROR("oal_set max_distance");
+
+  alSourcei(source_id, AL_BUFFER, buffer_id);
   CHECK_ERROR("oal_set");
   return 0;
 }
