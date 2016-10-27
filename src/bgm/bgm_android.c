@@ -17,6 +17,13 @@ l_bgm_load(lua_State* L) {
 
 
 static int
+l_bgm_volume(lua_State* L) {
+    lua_Number v = lua_tonumber(L, 1);
+    sl_bgm_volume((float)v);
+    return 0;
+}
+
+static int
 l_bgm_play(lua_State* L) {
     bool is_loop = lua_toboolean(L, 1);
     sl_bgm_play(is_loop);
@@ -42,7 +49,8 @@ bgm_android(lua_State* L) {
         {"play", l_bgm_play},
         {"stop", l_bgm_stop},
         {"pause", l_bgm_pause},
-
+        {"volume", l_bgm_volume},
+        
         {NULL, NULL},
     };
 

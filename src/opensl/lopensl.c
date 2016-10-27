@@ -30,7 +30,7 @@ _id2string(lua_State* L) {
 
 static int
 l_free_source(lua_State* L) {
-    struct sl_source* source = _get_source(L, -1);
+    struct sl_source* source = _get_source(L, 1);
     sl_source_set_state(source, SL_SOURCE_STOP);
     sl_source_free(source);
     return 0;
@@ -38,7 +38,7 @@ l_free_source(lua_State* L) {
 
 static int
 l_clear_source(lua_State* L) {
-    struct sl_source* source = _get_source(L, -1);
+    struct sl_source* source = _get_source(L, 1);
     sl_source_clear(source);
     return 0;
 }
@@ -46,21 +46,21 @@ l_clear_source(lua_State* L) {
 
 static int
 l_play_source(lua_State* L) {
-    struct sl_source* source = _get_source(L, -1);
+    struct sl_source* source = _get_source(L, 1);
     sl_source_set_state(source, SL_SOURCE_PLAY);
     return 0;
 }
 
 static int
 l_stop_source(lua_State* L) {
-    struct sl_source* source = _get_source(L, -1);
+    struct sl_source* source = _get_source(L, 1);
     sl_source_set_state(source, SL_SOURCE_STOP);
     return 0;
 }
 
 static int
 l_rewind_source(lua_State* L) {
-    struct sl_source* source = _get_source(L, -1);
+    struct sl_source* source = _get_source(L, 1);
     sl_source_set_state(source, SL_SOURCE_STOP);
     sl_source_set_state(source, SL_SOURCE_PLAY);
     return 0;
@@ -68,22 +68,22 @@ l_rewind_source(lua_State* L) {
 
 static int
 l_pause_source(lua_State* L) {
-    struct sl_source* source = _get_source(L, -1);
+    struct sl_source* source = _get_source(L, 1);
     sl_source_set_state(source, SL_SOURCE_PAUSE);
     return 0;
 }
 
 static int
 l_volume_source(lua_State* L) {
-    struct sl_source* source = _get_source(L, -1);
-    float volume = lua_tonumber(L, -2);
+    struct sl_source* source = _get_source(L, 1);
+    float volume = lua_tonumber(L, 2);
     sl_source_volume(source, volume);
     return 0;
 }
 
 static int
 l_source_state(lua_State* L) {
-    struct sl_source* source = _get_source(L, -1);
+    struct sl_source* source = _get_source(L, 1);
     enum sl_source_state state =  sl_source_get_state(source);
     lua_pushnumber(L, state);
     return 1;

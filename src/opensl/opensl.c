@@ -3,6 +3,7 @@
 
 #include <SLES/OpenSLES.h>
 #include <SLES/OpenSLES_Android.h>
+#include <math.h>
 
 #include "opensl.h"
 
@@ -472,15 +473,32 @@ sl_source_get_state(struct sl_source* source) {
 }
 
 
-bool
-sl_source_volume(struct sl_source* source, float volume) {
+inline static bool
+_sl_volume(SLVolumeItf playerVolume, float volume) {
     SLmillibel max;
-    SLresult result = (*source->bqPlayerVolume)->GetMaxVolumeLevel(source->bqPlayerVolume, &max);
+    SLresult result = (*playerVolume)->GetMaxVolumeLevel(playerVolume, &max);
     if(result == SL_RESULT_SUCCESS) {
-        SLmillibel level = max*volume;
-         _return_result((*source->bqPlayerVolume)->SetVolumeLevel(source->bqPlayerVolume, level));
+        SLmillibel level = max;
+        float old_volume = volume;
+        volume *= 100.0;
+
+        if(volume<=0.02f) {
+            level = SL_MILLIBEL_MIN;
+        }else if (volume < 100.0f) {
+            level = M_LN2 / log(100.0f / (100.0f - volume)) * -500.0f;
+                if (level > 0)
+                    level = SL_MILLIBEL_MIN;
+        }
+        // sl_log("_sl_volume old_volume: %f volume: %f max:%d level:%d\n", old_volume, volume, max, level);
+         _return_result((*playerVolume)->SetVolumeLevel(playerVolume, level));
     }
     return false;
+}
+
+
+bool
+sl_source_volume(struct sl_source* source, float volume) {
+    return _sl_volume(source->bqPlayerVolume, volume);
 }
 
 
@@ -636,6 +654,15 @@ sl_bgm_pause() {
     if(_bgm_is_init()) {
         (*bgm->fdPlayerPlay)->SetPlayState(bgm->fdPlayerPlay, SL_PLAYSTATE_PAUSED);
     }
+}
+
+bool
+sl_bgm_volume(float volume) {
+    struct sl_bgm* bgm = &ENV.bgm;
+    if(_bgm_is_init()) {
+        return _sl_volume(bgm->fdPlayerVolume, volume);
+    }
+    return false;
 }
 
 // -------------------- for JNI --------------------

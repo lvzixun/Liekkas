@@ -48,5 +48,6 @@ bool sl_bgm_load(const char* file_name);
 void sl_bgm_play(bool is_loop);
 void sl_bgm_stop();
 void sl_bgm_pause();
+bool sl_bgm_volume(float volume);
 
 #endif
