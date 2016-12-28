@@ -20,6 +20,16 @@ static ADAudioSource* _instance = nil;
 @property (readonly) bool isload;
 @end
 
+
+static void setMode(NSString* mode) {
+    NSError* error = nil;
+    [[AVAudioSession sharedInstance] setCategory:mode error:&error];
+    if(error) {
+        NSLog(@"setmode error: %@", error);
+    }
+}
+
+
 @implementation ADAudioSource
 
 -(id) init {
@@ -40,12 +50,11 @@ static ADAudioSource* _instance = nil;
 +(id) sharedInstance {
   if(!_instance) {
     _instance = [[ADAudioSource alloc] init];
-//      NSError* error = nil;
-//      [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryAmbient error:&error];
-//      assert(error==nil);
   }
   return _instance;
 }
+
+
 
 -(bool) load:(NSString*) filepath {
   if(_source_filepath == nil || ![filepath isEqualToString:_source_filepath]) {
@@ -95,7 +104,6 @@ static ADAudioSource* _instance = nil;
 
 
 - (void)audioPlayerDidFinishPlaying:(AVAudioPlayer *)player successfully:(BOOL)flag {
-  NSLog(@"audioPlayerDidFinishPlaying %d", flag);
   _isplaying = false;
   if(_loop) {
     [self play];
@@ -111,6 +119,25 @@ static ADAudioSource* _instance = nil;
     [self play];
   }
 }
+
+- (void) applicationWillResignActive:(NSNotification *) notification {
+  if(_isplaying) {
+    [self pause];
+  }
+}
+
+- (void) applicationDidBecomeActive:(NSNotification *) notification {
+  if(_isplaying) {
+    [self play];
+  }
+}
+
+- (void) applicationWillTerminate:(NSNotification *) notification {
+  if(_isplaying) {
+    [self pause];
+  }
+}
+
 @end
 
 static int
@@ -128,6 +155,7 @@ l_play(lua_State* L) {
   bool loop = lua_toboolean(L, 1);
   ADAudioSource* source = [ADAudioSource sharedInstance];
   if([source isload]){
+    setMode(AVAudioSessionCategorySoloAmbient);
     [source loop:loop];
     [source play];
   }
@@ -138,6 +166,7 @@ static int
 l_stop(lua_State* L) {
   ADAudioSource* source = [ADAudioSource sharedInstance];
   if([source isload]){
+    setMode(AVAudioSessionCategoryAmbient);
     [source stop];
   }
   return 0;
@@ -147,11 +176,19 @@ static int
 l_pause(lua_State* L) {
  ADAudioSource* source = [ADAudioSource sharedInstance];
   if([source isload]){
+    setMode(AVAudioSessionCategoryAmbient);
     [source pause];
   }
   return 0; 
 }
 
+static int
+l_volume(lua_State* L) {
+  ADAudioSource* sourcer = [ADAudioSource sharedInstance];
+  lua_Number v = lua_tonumber(L, 1);
+  [sourcer setVolume:(float)v];
+  return 0;
+}
 
 int
 bgm_ios(lua_State* L) {
@@ -161,9 +198,11 @@ bgm_ios(lua_State* L) {
     {"play", l_play},
     {"stop", l_stop},
     {"pause", l_pause},
+    {"volume", l_volume},
     {NULL, NULL},
   };
-  
+    
+  setMode(AVAudioSessionCategoryAmbient);
   luaL_newlib(L, l);
   return 1;
 }
