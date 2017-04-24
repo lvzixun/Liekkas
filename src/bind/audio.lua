@@ -57,7 +57,14 @@ function M:load(file_path, file_type)
   if not entry then
     local info = func(file_path)
     print("load: "..tostring(info))
+    
     local buffer_id = lk.create_buffer()
+    local old_gc_func = debug.getmetatable(buffer_id).__gc
+    debug.getmetatable(buffer_id).__gc = function (buffer_id)
+      self:unload(file_path)
+      old_gc_func(buffer_id)
+    end
+
     lk.buffer_bind(buffer_id, info)
     entry = {
       -- info = info,  -- for collect garbage
